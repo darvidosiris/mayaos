@@ -1,0 +1,6 @@
+#!/bin/sh
+# Launched by XFCE XDG autostart after a user graphical session begins.
+[ -n "${DISPLAY:-}" ] || exit 1
+[ -n "${XDG_SESSION_ID:-}" ] || exit 1
+[ -e /dev/ttyS0 ] || exit 1
+printf 'MAYAOS_DESKTOP_OK display=%s session=%s\n' "$DISPLAY" "$XDG_SESSION_ID" > /dev/ttyS0
