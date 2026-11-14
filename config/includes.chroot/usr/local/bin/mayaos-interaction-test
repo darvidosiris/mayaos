@@ -91,8 +91,9 @@ sleep 5
 report MAYAOS_INTERACTION_OK
  >/dev/null 2>&1; then break; fi
   attempt=$((attempt+1))
-  xdotool windowactivate --sync "$shell_id" 2>/dev/null || true
-  xdotool mousemove 62 "$dock_y" click 1 || fail "launcher click"
+  report "MAYAOS_LAUNCHER_ATTEMPT $attempt dock_y=$dock_y shell_id=$shell_id"
+  timeout 3s xdotool windowactivate "$shell_id" 2>/dev/null || true
+  timeout 5s xdotool mousemove 62 "$dock_y" click 1 || fail "launcher click"
   sleep 3
 done
 xdotool search --onlyvisible --name '^MayaOS Launcher
