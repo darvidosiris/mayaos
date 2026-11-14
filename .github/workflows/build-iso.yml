@@ -83,15 +83,19 @@ jobs:
           echo "Starting headless QEMU boot smoke test for $ISO"
           sudo chown -R "$(id -u):$(id -g)" out
           test -w out || { echo "ISO output directory is not writable"; exit 1; }
+          python3 scripts/ci-qemu-monitor.py > out/qemu-monitor.log 2>&1 &
+          MONITOR_PID=$!
           set +e
           timeout --signal=TERM --kill-after=10s 180s \
             qemu-system-x86_64 \
               -machine accel=tcg -m 2048 -smp 2 \
               -cdrom "$ISO" -boot d \
-              -display none -serial file:out/qemu-serial.log \
-              -monitor none -no-reboot \
+              -display none -vga std -serial file:out/qemu-serial.log \
+              -monitor unix:out/qemu-monitor.sock,server=on,wait=off -no-reboot \
               -nic none
           RC=$?
+          kill "$MONITOR_PID" 2>/dev/null || true
+          wait "$MONITOR_PID" 2>/dev/null || true
           set -e
           if [ "$RC" -ne 0 ] && [ "$RC" -ne 124 ]; then
             echo "QEMU terminated unexpectedly with exit $RC"
@@ -107,7 +111,7 @@ jobs:
 
       - name: Upload ISO artifacts
         uses: actions/upload-artifact@v4
-        if: success()
+        if: always()
         with:
           name: mayaos-iso
           path: |
@@ -115,6 +119,8 @@ jobs:
             out/*.sha256
             out/build-*.log
             out/qemu-serial.log
+            out/qemu-monitor.log
+            out/qemu-boot-*.ppm
           if-no-files-found: warn
           retention-days: 14
 
