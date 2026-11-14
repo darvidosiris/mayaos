@@ -1,0 +1,120 @@
+#!/usr/bin/python3
+"""MayaOS native Qt Quick dock preview; XFCE stays the window manager."""
+import os
+import subprocess
+import sys
+from datetime import datetime
+
+from PySide6.QtCore import QObject, Property, QTimer, Signal, Slot, QUrl
+from PySide6.QtGui import QGuiApplication
+from PySide6.QtQml import QQmlApplicationEngine
+
+APPS = {
+    "files": ["thunar"],
+    "terminal": ["xfce4-terminal"],
+    "settings": ["xfce4-settings-manager"],
+    "sound": ["pavucontrol"],
+    "session": ["xfce4-session-logout"],
+    "network": ["nm-connection-editor"],
+    "notifications": ["xfce4-notifyd-config"],
+}
+
+class Bridge(QObject):
+    clockChanged = Signal()
+    windowsChanged = Signal()
+    statusChanged = Signal()
+
+    def __init__(self):
+        super().__init__()
+        self._clock = ""
+        self._windows = []
+        self._status = "Network: unavailable  •  Volume: unavailable"
+        self.update_clock()
+        self.update_windows()
+        self.update_status()
+        self.clock_timer = QTimer(self)
+        self.clock_timer.timeout.connect(self.update_clock)
+        self.clock_timer.start(10000)
+        self.window_timer = QTimer(self)
+        self.window_timer.timeout.connect(self.update_windows)
+        self.window_timer.start(3000)
+        self.status_timer = QTimer(self)
+        self.status_timer.timeout.connect(self.update_status)
+        self.status_timer.start(15000)
+
+    @Property(str, notify=clockChanged)
+    def clock(self):
+        return self._clock
+
+    @Property("QVariantList", notify=windowsChanged)
+    def windows(self):
+        return self._windows
+
+    @Property(str, notify=statusChanged)
+    def status(self):
+        return self._status
+
+    def command(self, args):
+        try:
+            return subprocess.check_output(args, text=True, stderr=subprocess.DEVNULL, timeout=2).strip()
+        except (OSError, subprocess.SubprocessError):
+            return ""
+
+    def update_clock(self):
+        self._clock = datetime.now().strftime("%a %b %d  •  %I:%M %p")
+        self.clockChanged.emit()
+
+    def update_windows(self):
+        output = self.command(["/usr/local/bin/mayaos-windowctl", "list"])
+        items = []
+        for line in output.splitlines():
+            if "\t" in line:
+                wid, name = line.split("\t", 1)
+                if wid.startswith("0x"):
+                    items.append({"wid": wid, "title": name[:22]})
+        if items != self._windows:
+            self._windows = items[:6]
+            self.windowsChanged.emit()
+
+    def update_status(self):
+        net = self.command(["nmcli", "-t", "-f", "STATE", "general"]) or "unavailable"
+        vol = self.command(["pactl", "get-sink-volume", "@DEFAULT_SINK@"])
+        import re
+        match = re.search(r"(\d+)%", vol)
+        level = match.group(1) + "%" if match else "unavailable"
+        value = f"Network: {net.splitlines()[0]}  •  Volume: {level}"
+        if value != self._status:
+            self._status = value
+            self.statusChanged.emit()
+
+    @Slot(str)
+    def launch(self, name):
+        args = APPS.get(name)
+        if args:
+            try:
+                subprocess.Popen(args, start_new_session=True)
+            except OSError:
+                pass
+
+    @Slot(str)
+    def activate(self, wid):
+        if wid.startswith("0x"):
+            self.launch_window("activate", wid)
+
+    @Slot(str)
+    def minimize(self, wid):
+        if wid.startswith("0x"):
+            self.launch_window("minimize", wid)
+
+    def launch_window(self, action, wid):
+        subprocess.Popen(["/usr/local/bin/mayaos-windowctl", action, wid],
+                         start_new_session=True)
+
+app = QGuiApplication(sys.argv)
+engine = QQmlApplicationEngine()
+bridge = Bridge()
+engine.rootContext().setContextProperty("mayaBridge", bridge)
+engine.load(QUrl.fromLocalFile("/usr/share/mayaos/shell/Main.qml"))
+if not engine.rootObjects():
+    sys.exit(1)
+sys.exit(app.exec())
