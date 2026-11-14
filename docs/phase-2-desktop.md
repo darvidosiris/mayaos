@@ -39,3 +39,12 @@ The Phase 2.3 window list also now parses tab-separated window entries correctly
 The default XFCE autostart entry launches `mayaos-shell-start`, which tries the PySide6 Qt Quick shell and falls back to the proven Tk dock if Qt fails to initialize. The native dock includes app shortcuts, searchable launcher, EWMH running-window list, clock, and quick settings. The XFCE window manager and LightDM remain in place. Qt startup failures are logged to `/tmp/mayaos-qt-shell.log`.
 
 Set `MAYAOS_SHELL_BACKEND=tk` to force the previous dock. This is a native Qt Quick **preview**, not a complete compositor or Wayland desktop environment. Test the new build in QEMU and verify that the Qt shell—not the Tk fallback—is running before considering this phase validated.
+
+## Phase 2.6 — responsive layout and keyboard accessibility
+- Qt Quick dock adjusts spacing at narrower screen widths and hides the redundant Settings shortcut under 800px; Settings remains in the launcher.
+- Launcher can be toggled with Ctrl+Space while the Qt shell has keyboard focus; Escape closes launcher and quick settings. The search field takes focus when the launcher opens.
+- Buttons expose accessible names and show a gold focus outline when keyboard-focused; hover tooltips identify actions.
+- Launcher and quick settings constrain width to the available display. Motion is conservative by default.
+- The Qt dock still uses XFCE as window manager; this does not yet establish system-wide global shortcuts, a full notification tray, or accessibility certification.
+
+Validation: run the Phase 2 ISO workflow, confirm that the Qt dock appears rather than Tk fallback, then interactively test Tab, Shift+Tab, Enter/Space, launcher search, Escape, and narrower resolutions. Screenshots alone cannot certify accessibility or shortcut operation.
