@@ -15,7 +15,7 @@ lb config noauto \
 	--archive-areas "main contrib non-free non-free-firmware" \
 	--architectures "${ARCH}" \
 	--binary-images iso-hybrid \
-	--bootappend-live "boot=live components quiet splash hostname=mayaos username=mayaos" \
+	--bootappend-live "boot=live components hostname=mayaos username=mayaos console=tty0 console=ttyS0,115200n8" \
 	--debian-installer none \
 	--debian-installer-gui false \
 	--apt-indices false \
