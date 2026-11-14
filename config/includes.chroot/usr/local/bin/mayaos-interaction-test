@@ -24,11 +24,110 @@ while [ "$i" -lt 45 ]; do
 done
 xdotool search --name '^MayaOS Native Preview$' >/dev/null 2>&1 || fail "native Qt shell not running"
 report MAYAOS_QT_SHELL_OK
-sleep 2
-# The dock spans the bottom of the screen. Click the leftmost MayaOS button.
-xdotool mousemove 62 "$dock_y" click 1 || fail "launcher click"
+# Wait until the shell is actually mapped and stable before clicking.
+shell_id=$(xdotool search --onlyvisible --name '^MayaOS Native Preview
+sleep 5
+# Close launcher and open Quick Settings using the visible dock button.
+xdotool mousemove 62 "$dock_y" click 1 || true
+sleep 1
+report "MAYAOS_QUICK_SETTINGS_CLICK x=$settings_x y=$dock_y"
+xdotool mousemove "$settings_x" "$dock_y" click 1 || fail "quick settings click"
 sleep 3
-xdotool search --onlyvisible --name '^MayaOS Launcher$' >/dev/null 2>&1 || fail "launcher not visible"
+xdotool search --onlyvisible --name '^MayaOS Quick Settings$' >/dev/null 2>&1 || { report "MAYAOS_OPEN_WINDOWS $(wmctrl -l | tr '\n' ';')"; fail "quick settings not visible"; }
+report MAYAOS_QUICK_SETTINGS_OK
+sleep 5
+# Open an actual application; verify a window exists and the EWMH task list sees it.
+thunar >/tmp/mayaos-test-thunar.log 2>&1 &
+sleep 5
+xdotool search --onlyvisible --class Thunar >/dev/null 2>&1 || fail "Thunar window missing"
+ /usr/local/bin/mayaos-windowctl list | grep -qi 'Thunar\|File Manager' || fail "Thunar absent from taskbar list"
+report MAYAOS_WINDOW_LIST_OK
+# Phase 2.8: verify actual minimize and restore behavior.
+thunar_id=$(xdotool search --onlyvisible --class Thunar 2>/dev/null | head -n 1)
+[ -n "$thunar_id" ] || fail "Thunar window ID missing"
+thunar_hex=$(printf '0x%x' "$thunar_id")
+/usr/local/bin/mayaos-windowctl minimize "$thunar_hex" || fail "minimize command"
+sleep 2
+/usr/local/bin/mayaos-windowctl activate "$thunar_hex" || fail "activate command"
+sleep 3
+xdotool search --onlyvisible --class Thunar >/dev/null 2>&1 || fail "Thunar not restored"
+report MAYAOS_WINDOW_CONTROLS_OK
+sleep 5
+report MAYAOS_INTERACTION_OK
+ 2>/dev/null | head -n 1)
+[ -n "$shell_id" ] || fail "native Qt shell not visible"
+sleep 5
+# Activate the dock, then click its MayaOS button. Retry only if still closed.
+attempt=0
+while [ "$attempt" -lt 3 ]; do
+  if xdotool search --onlyvisible --name '^MayaOS Launcher
+sleep 5
+# Close launcher and open Quick Settings using the visible dock button.
+xdotool mousemove 62 "$dock_y" click 1 || true
+sleep 1
+report "MAYAOS_QUICK_SETTINGS_CLICK x=$settings_x y=$dock_y"
+xdotool mousemove "$settings_x" "$dock_y" click 1 || fail "quick settings click"
+sleep 3
+xdotool search --onlyvisible --name '^MayaOS Quick Settings$' >/dev/null 2>&1 || { report "MAYAOS_OPEN_WINDOWS $(wmctrl -l | tr '\n' ';')"; fail "quick settings not visible"; }
+report MAYAOS_QUICK_SETTINGS_OK
+sleep 5
+# Open an actual application; verify a window exists and the EWMH task list sees it.
+thunar >/tmp/mayaos-test-thunar.log 2>&1 &
+sleep 5
+xdotool search --onlyvisible --class Thunar >/dev/null 2>&1 || fail "Thunar window missing"
+ /usr/local/bin/mayaos-windowctl list | grep -qi 'Thunar\|File Manager' || fail "Thunar absent from taskbar list"
+report MAYAOS_WINDOW_LIST_OK
+# Phase 2.8: verify actual minimize and restore behavior.
+thunar_id=$(xdotool search --onlyvisible --class Thunar 2>/dev/null | head -n 1)
+[ -n "$thunar_id" ] || fail "Thunar window ID missing"
+thunar_hex=$(printf '0x%x' "$thunar_id")
+/usr/local/bin/mayaos-windowctl minimize "$thunar_hex" || fail "minimize command"
+sleep 2
+/usr/local/bin/mayaos-windowctl activate "$thunar_hex" || fail "activate command"
+sleep 3
+xdotool search --onlyvisible --class Thunar >/dev/null 2>&1 || fail "Thunar not restored"
+report MAYAOS_WINDOW_CONTROLS_OK
+sleep 5
+report MAYAOS_INTERACTION_OK
+ >/dev/null 2>&1; then break; fi
+  attempt=$((attempt+1))
+  xdotool windowactivate --sync "$shell_id" 2>/dev/null || true
+  xdotool mousemove 62 "$dock_y" click 1 || fail "launcher click"
+  sleep 3
+done
+xdotool search --onlyvisible --name '^MayaOS Launcher
+sleep 5
+# Close launcher and open Quick Settings using the visible dock button.
+xdotool mousemove 62 "$dock_y" click 1 || true
+sleep 1
+report "MAYAOS_QUICK_SETTINGS_CLICK x=$settings_x y=$dock_y"
+xdotool mousemove "$settings_x" "$dock_y" click 1 || fail "quick settings click"
+sleep 3
+xdotool search --onlyvisible --name '^MayaOS Quick Settings$' >/dev/null 2>&1 || { report "MAYAOS_OPEN_WINDOWS $(wmctrl -l | tr '\n' ';')"; fail "quick settings not visible"; }
+report MAYAOS_QUICK_SETTINGS_OK
+sleep 5
+# Open an actual application; verify a window exists and the EWMH task list sees it.
+thunar >/tmp/mayaos-test-thunar.log 2>&1 &
+sleep 5
+xdotool search --onlyvisible --class Thunar >/dev/null 2>&1 || fail "Thunar window missing"
+ /usr/local/bin/mayaos-windowctl list | grep -qi 'Thunar\|File Manager' || fail "Thunar absent from taskbar list"
+report MAYAOS_WINDOW_LIST_OK
+# Phase 2.8: verify actual minimize and restore behavior.
+thunar_id=$(xdotool search --onlyvisible --class Thunar 2>/dev/null | head -n 1)
+[ -n "$thunar_id" ] || fail "Thunar window ID missing"
+thunar_hex=$(printf '0x%x' "$thunar_id")
+/usr/local/bin/mayaos-windowctl minimize "$thunar_hex" || fail "minimize command"
+sleep 2
+/usr/local/bin/mayaos-windowctl activate "$thunar_hex" || fail "activate command"
+sleep 3
+xdotool search --onlyvisible --class Thunar >/dev/null 2>&1 || fail "Thunar not restored"
+report MAYAOS_WINDOW_CONTROLS_OK
+sleep 5
+report MAYAOS_INTERACTION_OK
+ >/dev/null 2>&1 || {
+  report "MAYAOS_OPEN_WINDOWS $(wmctrl -l | tr '\\n' ';')"
+  fail "launcher not visible"
+}
 report MAYAOS_LAUNCHER_OK
 sleep 5
 # Close launcher and open Quick Settings using the visible dock button.
