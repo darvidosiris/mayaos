@@ -1,7 +1,13 @@
 #!/bin/sh
 # Phase 2.7: real X11 interactions in the live XFCE session.
-# This script is opt-in: enabled only by the CI kernel command line.
-[ "$(cat /sys/firmware/qemu_fw_cfg/by_name/opt/mayaos-ci/raw 2>/dev/null)" = "1" ] || exit 0
+# This script is opt-in: root service verifies QEMU fw_cfg and publishes a marker.
+# Give the root reporter a moment to initialize; never run on normal desktops.
+n=0
+while [ ! -f /run/mayaos-ci/enabled ] && [ "$n" -lt 20 ]; do
+  n=$((n+1))
+  sleep 1
+done
+[ -f /run/mayaos-ci/enabled ] || exit 0
 export DISPLAY="${DISPLAY:-:0}"
 geometry=$(xdotool getdisplaygeometry 2>/dev/null || echo "1280 800")
 screen_w=${geometry%% *}
@@ -10,6 +16,7 @@ dock_y=$((screen_h - 32))
 settings_x=$((screen_w - 210))
 report() { printf '%s\n' "$1" >> /tmp/mayaos-interaction-events; }
 fail() { report "MAYAOS_INTERACTION_FAIL $1"; exit 1; }
+report "MAYAOS_INTERACTION_TEST_STARTED display=$DISPLAY"
 i=0
 while [ "$i" -lt 45 ]; do
   if xdotool search --name '^MayaOS Native Preview$' >/dev/null 2>&1; then break; fi
