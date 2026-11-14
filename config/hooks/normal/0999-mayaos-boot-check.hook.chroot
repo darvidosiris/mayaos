@@ -9,3 +9,5 @@ chmod 0755 /usr/local/bin/mayaos-appearance
 chmod 0755 /usr/local/bin/mayaos-windowctl
 chmod 0755 /usr/local/bin/mayaos-qt-shell
 chmod 0755 /usr/local/bin/mayaos-shell-start
+chmod 0755 /usr/local/bin/mayaos-interaction-test /usr/local/bin/mayaos-interaction-report
+systemctl enable mayaos-interaction-report.service
