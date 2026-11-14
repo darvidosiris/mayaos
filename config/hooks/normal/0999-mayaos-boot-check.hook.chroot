@@ -2,3 +2,5 @@
 set -e
 systemctl enable mayaos-boot-check.service
 chmod 0755 /usr/local/bin/mayaos-desktop-check
+chmod 0755 /usr/local/bin/mayaos-desktop-report
+systemctl enable mayaos-desktop-report.service
