@@ -74,7 +74,7 @@ jobs:
               ./scripts/build-iso.sh --skip-deps-check
             '
 
-      - name: QEMU verified guest boot test
+      - name: QEMU verified graphical desktop test
         run: |
           sudo apt-get update
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y qemu-system-x86
@@ -86,7 +86,7 @@ jobs:
           python3 scripts/ci-qemu-monitor.py > out/qemu-monitor.log 2>&1 &
           MONITOR_PID=$!
           set +e
-          timeout --signal=TERM --kill-after=10s 180s \
+          timeout --signal=TERM --kill-after=10s 240s \
             qemu-system-x86_64 \
               -machine accel=tcg -m 2048 -smp 2 \
               -cdrom "$ISO" -boot d \
@@ -107,7 +107,13 @@ jobs:
             exit 1
           fi
           echo "Verified MayaOS reached the multi-user systemd boot milestone."
-          echo "Graphical desktop readiness is not yet verified."
+          if ! grep -q "MAYAOS_DESKTOP_OK" out/qemu-serial.log; then
+            echo "XFCE graphical session did not emit the desktop marker."
+            tail -n 100 out/qemu-serial.log || true
+            exit 1
+          fi
+          echo "Verified XFCE session autostart reached a graphical DISPLAY."
+          echo "Desktop visual usability still requires screenshot/manual inspection."
 
       - name: Upload ISO artifacts
         uses: actions/upload-artifact@v4
@@ -128,4 +134,4 @@ jobs:
         if: success()
         run: |
           echo "Artifact uploaded as a *candidate* ISO."
-          echo "Bootability is not certified by CI until QEMU/hardware testing."
+          echo "Graphical session marker verified; visual and hardware testing still required."
