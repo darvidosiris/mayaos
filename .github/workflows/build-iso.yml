@@ -74,7 +74,7 @@ jobs:
               ./scripts/build-iso.sh --skip-deps-check
             '
 
-      - name: QEMU headless boot smoke test
+      - name: QEMU verified guest boot test
         run: |
           sudo apt-get update
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y qemu-system-x86
@@ -84,7 +84,7 @@ jobs:
           sudo chown -R "$(id -u):$(id -g)" out
           test -w out || { echo "ISO output directory is not writable"; exit 1; }
           set +e
-          timeout --signal=TERM --kill-after=10s 90s \
+          timeout --signal=TERM --kill-after=10s 180s \
             qemu-system-x86_64 \
               -machine accel=tcg -m 2048 -smp 2 \
               -cdrom "$ISO" -boot d \
@@ -97,8 +97,13 @@ jobs:
             echo "QEMU terminated unexpectedly with exit $RC"
             exit "$RC"
           fi
-          echo "QEMU smoke window completed (exit $RC)."
-          echo "This only verifies VM execution; desktop boot is NOT yet certified."
+          if ! grep -q "MAYAOS_BOOT_OK" out/qemu-serial.log; then
+            echo "MayaOS guest did not emit its systemd boot marker."
+            tail -n 100 out/qemu-serial.log || true
+            exit 1
+          fi
+          echo "Verified MayaOS reached the multi-user systemd boot milestone."
+          echo "Graphical desktop readiness is not yet verified."
 
       - name: Upload ISO artifacts
         uses: actions/upload-artifact@v4
