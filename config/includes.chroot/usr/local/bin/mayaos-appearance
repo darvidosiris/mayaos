@@ -1,0 +1,23 @@
+#!/bin/sh
+# Per-session XFCE styling; do not remove or overwrite user configuration.
+set -u
+WALL=/usr/share/backgrounds/mayaos/mayaos-sunrise.svg
+if command -v xfconf-query >/dev/null 2>&1; then
+  xfconf-query -c xsettings -p /Net/ThemeName -n -t string -s Greybird 2>/dev/null || true
+  xfconf-query -c xsettings -p /Net/IconThemeName -n -t string -s elementary-xfce 2>/dev/null || true
+  # xfdesktop dynamically creates monitor/workspace paths; enumerate instead of assuming monitor0.
+  xfconf-query -c xfce4-desktop -lv 2>/dev/null | awk '$1 ~ /\/last-image$/ {print $1}' |
+    while IFS= read -r key; do
+      xfconf-query -c xfce4-desktop -p "$key" -s "$WALL" 2>/dev/null || true
+    done
+  xfconf-query -c xfce4-desktop -lv 2>/dev/null | awk '$1 ~ /\/image-style$/ {print $1}' |
+    while IFS= read -r key; do
+      xfconf-query -c xfce4-desktop -p "$key" -s 5 2>/dev/null || true
+    done
+  # Hide removable-device icons without removing access through Thunar.
+  xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-removable -n -t bool -s false 2>/dev/null || true
+fi
+# Preserve xfce4-panel as a recovery option. Stop it only for this live session.
+if [ "${MAYAOS_KEEP_XFCE_PANEL:-0}" != 1 ]; then
+  xfce4-panel --quit >/dev/null 2>&1 || true
+fi
