@@ -1,0 +1,10 @@
+[Unit]
+Description=MayaOS CI graphical interaction serial bridge
+After=systemd-user-sessions.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/mayaos-interaction-report
+
+[Install]
+WantedBy=multi-user.target
