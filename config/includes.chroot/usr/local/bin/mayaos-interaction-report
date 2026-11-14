@@ -1,0 +1,17 @@
+#!/bin/sh
+[ "$(cat /sys/firmware/qemu_fw_cfg/by_name/opt/mayaos-ci/raw 2>/dev/null)" = "1" ] || exit 0
+touch /tmp/mayaos-interaction-events
+chmod 0666 /tmp/mayaos-interaction-events
+last=0
+i=0
+while [ "$i" -lt 220 ]; do
+  if [ -f /tmp/mayaos-interaction-events ]; then
+    lines=$(wc -l < /tmp/mayaos-interaction-events)
+    if [ "$lines" -gt "$last" ]; then
+      sed -n "$((last+1)),${lines}p" /tmp/mayaos-interaction-events > /dev/ttyS0
+      last="$lines"
+    fi
+  fi
+  i=$((i+1))
+  sleep 1
+done
