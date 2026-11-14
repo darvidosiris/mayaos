@@ -3,7 +3,7 @@
 # This script is opt-in: enabled only by the CI kernel command line.
 [ "$(cat /sys/firmware/qemu_fw_cfg/by_name/opt/mayaos-ci/raw 2>/dev/null)" = "1" ] || exit 0
 export DISPLAY="${DISPLAY:-:0}"
-report() { printf '%s\n' "$1" > /dev/ttyS0 2>/dev/null || true; }
+report() { printf '%s\\n' "$1" >> /tmp/mayaos-interaction-events; }
 fail() { report "MAYAOS_INTERACTION_FAIL $1"; exit 1; }
 i=0
 while [ "$i" -lt 45 ]; do
