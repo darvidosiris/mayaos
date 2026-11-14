@@ -46,5 +46,15 @@ sleep 5
 xdotool search --onlyvisible --class Thunar >/dev/null 2>&1 || fail "Thunar window missing"
  /usr/local/bin/mayaos-windowctl list | grep -qi 'Thunar\|File Manager' || fail "Thunar absent from taskbar list"
 report MAYAOS_WINDOW_LIST_OK
+# Phase 2.8: verify actual minimize and restore behavior.
+thunar_id=$(xdotool search --onlyvisible --class Thunar 2>/dev/null | head -n 1)
+[ -n "$thunar_id" ] || fail "Thunar window ID missing"
+thunar_hex=$(printf '0x%x' "$thunar_id")
+/usr/local/bin/mayaos-windowctl minimize "$thunar_hex" || fail "minimize command"
+sleep 2
+/usr/local/bin/mayaos-windowctl activate "$thunar_hex" || fail "activate command"
+sleep 3
+xdotool search --onlyvisible --class Thunar >/dev/null 2>&1 || fail "Thunar not restored"
+report MAYAOS_WINDOW_CONTROLS_OK
 sleep 5
 report MAYAOS_INTERACTION_OK
