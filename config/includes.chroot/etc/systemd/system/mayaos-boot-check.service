@@ -1,0 +1,11 @@
+[Unit]
+Description=MayaOS live boot verification marker
+After=multi-user.target
+ConditionKernelCommandLine=boot=live
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'printf "MAYAOS_BOOT_OK\n" > /dev/ttyS0'
+
+[Install]
+WantedBy=multi-user.target
