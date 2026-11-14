@@ -1,5 +1,10 @@
 #!/bin/sh
 [ "$(cat /sys/firmware/qemu_fw_cfg/by_name/opt/mayaos-ci/raw 2>/dev/null)" = "1" ] || exit 0
+# Root can read QEMU fw_cfg; the graphical user may not.
+# Publish a read-only CI opt-in marker for the user-session test.
+install -d -m 0755 /run/mayaos-ci
+: > /run/mayaos-ci/enabled
+chmod 0644 /run/mayaos-ci/enabled
 touch /tmp/mayaos-interaction-events
 printf "MAYAOS_INTERACTION_REPORTER_READY\n" > /dev/ttyS0
 chmod 0666 /tmp/mayaos-interaction-events
