@@ -27,8 +27,6 @@ lb config noauto \
 	--iso-volume "MayaOS ${SUITE}" \
 	--memtest none \
 	--win32-loader false \
-	--updates true \
-	--security true \
 	--mirror-bootstrap "${MIRROR}" \
 	--mirror-chroot "${MIRROR}" \
 	--mirror-binary "${MIRROR}" \
