@@ -13,7 +13,7 @@ geometry=$(xdotool getdisplaygeometry 2>/dev/null || echo "1280 800")
 screen_w=${geometry%% *}
 screen_h=${geometry##* }
 dock_y=$((screen_h - 32))
-settings_x=$((screen_w - 210))
+settings_x=$((screen_w - 300))
 report() { printf '%s\n' "$1" >> /tmp/mayaos-interaction-events; }
 fail() { report "MAYAOS_INTERACTION_FAIL $1"; exit 1; }
 report "MAYAOS_INTERACTION_TEST_STARTED display=$DISPLAY"
@@ -34,9 +34,10 @@ sleep 5
 # Close launcher and open Quick Settings using the visible dock button.
 xdotool mousemove 62 "$dock_y" click 1 || true
 sleep 1
+report "MAYAOS_QUICK_SETTINGS_CLICK x=$settings_x y=$dock_y"
 xdotool mousemove "$settings_x" "$dock_y" click 1 || fail "quick settings click"
 sleep 3
-xdotool search --onlyvisible --name '^MayaOS Quick Settings$' >/dev/null 2>&1 || fail "quick settings not visible"
+xdotool search --onlyvisible --name '^MayaOS Quick Settings$' >/dev/null 2>&1 || { report "MAYAOS_OPEN_WINDOWS $(wmctrl -l | tr '\n' ';')"; fail "quick settings not visible"; }
 report MAYAOS_QUICK_SETTINGS_OK
 sleep 5
 # Open an actual application; verify a window exists and the EWMH task list sees it.
