@@ -1,6 +1,5 @@
 #!/bin/sh
-# Launched by XFCE XDG autostart after a user graphical session begins.
+# Runs as the live desktop user through XFCE XDG autostart.
 [ -n "${DISPLAY:-}" ] || exit 1
-[ -n "${XDG_SESSION_ID:-}" ] || exit 1
-[ -e /dev/ttyS0 ] || exit 1
-printf 'MAYAOS_DESKTOP_OK display=%s session=%s\n' "$DISPLAY" "$XDG_SESSION_ID" > /dev/ttyS0
+[ -d "${HOME:-/nonexistent}" ] || exit 1
+printf 'display=%s user=%s\n' "$DISPLAY" "$(id -un)" > /tmp/mayaos-desktop-ready
