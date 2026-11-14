@@ -131,6 +131,62 @@ tk.Button(dock, text="Session", bg=PANEL, fg=GOLD, relief="flat",
           font=("DejaVu Sans", 10), command=lambda: launch(["xfce4-session-logout"])).pack(side="right", padx=10)
 tk.Button(dock, text="Sound", bg=PANEL, fg=GOLD, relief="flat",
           font=("DejaVu Sans", 10), command=lambda: launch(["pavucontrol"])).pack(side="right", padx=8)
+# Phase 2.4: lightweight status center. No elevated privileges or automatic
+# changes to connectivity, sound, or notification preferences.
+status_popup = None
+
+def command_output(args):
+    try:
+        return subprocess.check_output(args, text=True, stderr=subprocess.DEVNULL,
+                                       timeout=2).strip()
+    except (OSError, subprocess.SubprocessError):
+        return ""
+
+def get_status():
+    network = command_output(["nmcli", "-t", "-f", "STATE", "general"])
+    network = network.splitlines()[0] if network else "Unavailable"
+    volume = command_output(["pactl", "get-sink-volume", "@DEFAULT_SINK@"])
+    import re
+    match = re.search(r"(\\d+)%", volume)
+    volume_text = match.group(1) + "%" if match else "Unavailable"
+    battery = "Not detected"
+    devices = command_output(["upower", "-e"]).splitlines()
+    for device in devices:
+        if "battery_" in device:
+            details = command_output(["upower", "-i", device])
+            match = re.search(r"percentage:\\s*([^\\n]+)", details)
+            battery = match.group(1).strip() if match else "Unknown"
+            break
+    return network, volume_text, battery
+
+def toggle_status():
+    global status_popup
+    if status_popup is not None and status_popup.winfo_exists():
+        status_popup.destroy()
+        status_popup = None
+        return
+    status_popup = tk.Toplevel(root)
+    status_popup.title("MayaOS Quick Settings")
+    status_popup.configure(bg=BG)
+    status_popup.geometry(f"320x300+{max(0, screen_w-340)}+{max(0, screen_h-375)}")
+    status_popup.attributes("-topmost", True)
+    tk.Label(status_popup, text="Quick Settings", bg=BG, fg=GOLD,
+             font=("DejaVu Sans", 16, "bold")).pack(pady=14)
+    network, volume, battery = get_status()
+    for title, value in (("Network", network), ("Volume", volume), ("Battery", battery)):
+        tk.Label(status_popup, text=f"{title}: {value}", bg=BG, fg=FG,
+                 font=("DejaVu Sans", 11)).pack(anchor="w", padx=22, pady=5)
+    actions = tk.Frame(status_popup, bg=BG)
+    actions.pack(pady=16)
+    for name, args in (("Network", ["nm-connection-editor"]),
+                       ("Sound", ["pavucontrol"]),
+                       ("Notifications", ["xfce4-notifyd-config"])):
+        tk.Button(actions, text=name, bg=PANEL, fg=GOLD, relief="flat",
+                  command=lambda a=args: launch(a)).pack(side="left", padx=3)
+    status_popup.bind("<Escape>", lambda _: toggle_status())
+
+tk.Button(dock, text="Quick Settings", bg=PANEL, fg=GOLD, relief="flat",
+          font=("DejaVu Sans", 10), command=toggle_status).pack(side="right", padx=8)
 tk.Label(dock, text="MayaOS", bg=PANEL, fg=GOLD,
          font=("DejaVu Sans", 10, "bold")).pack(side="right", padx=12)
 root.bind("<Escape>", lambda _: launcher.destroy() if launcher and launcher.winfo_exists() else None)
