@@ -121,7 +121,7 @@ jobs:
           if ! grep -q "MAYAOS_INTERACTION_REPORTER_READY" out/qemu-serial.log; then
             echo "CI guest serial bridge did not report ready; check fw_cfg flag and systemd service."
           fi
-          for marker in MAYAOS_QT_SHELL_OK MAYAOS_LAUNCHER_OK MAYAOS_QUICK_SETTINGS_OK MAYAOS_WINDOW_LIST_OK MAYAOS_INTERACTION_OK; do
+          for marker in MAYAOS_QT_SHELL_OK MAYAOS_LAUNCHER_OK MAYAOS_QUICK_SETTINGS_OK MAYAOS_WINDOW_LIST_OK MAYAOS_WINDOW_CONTROLS_OK MAYAOS_INTERACTION_OK; do
             if ! grep -q "$marker" out/qemu-serial.log; then
               echo "Missing Phase 2.7 milestone: $marker"
               tail -n 100 out/qemu-serial.log || true
