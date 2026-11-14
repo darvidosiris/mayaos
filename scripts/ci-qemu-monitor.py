@@ -14,7 +14,7 @@ def command(cmd):
             s.settimeout(5)
             s.connect(monitor)
             s.recv(4096)
-            s.sendall((cmd + "\\n").encode())
+            s.sendall((cmd + "\n").encode())
             time.sleep(0.3)
             return s.recv(4096).decode(errors="replace")
     except (OSError, TimeoutError) as exc:
