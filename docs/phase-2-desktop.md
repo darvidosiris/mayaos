@@ -20,3 +20,12 @@ To disable it persistently in a customized installation, remove
 - Add wallpaper and appearance controls
 - Add tray, notifications, workspace controls, and accessibility testing
 - Test real desktop usability in QEMU and on supported hardware
+
+## Phase 2.2 — visual identity
+- Navy/gold sunrise SVG wallpaper at `/usr/share/backgrounds/mayaos/mayaos-sunrise.svg`
+- Session-scoped XFCE theme and desktop-icon preferences
+- XFCE top panel is stopped in the live preview; the MayaOS dock now includes a clock, sound and session controls
+- Restore the XFCE panel with `xfce4-panel &` or set `MAYAOS_KEEP_XFCE_PANEL=1` before starting the shell
+- This does not remove XFCE packages or replace the display manager
+
+Rebuild the ISO from the Phase 2 branch and inspect `mayaos-desktop-preview` screenshots in the GitHub Actions run artifacts. If the wallpaper is missing, inspect xfdesktop's monitor-specific xfconf properties; not all XFCE configurations use the same paths.
