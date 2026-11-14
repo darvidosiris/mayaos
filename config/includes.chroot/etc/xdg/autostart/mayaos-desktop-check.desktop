@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=MayaOS Desktop CI Marker
+Comment=Report live XFCE session startup to serial console
+Exec=/usr/local/bin/mayaos-desktop-check
+OnlyShowIn=XFCE;
+Terminal=false
+NoDisplay=true
+X-GNOME-Autostart-enabled=true
