@@ -1,0 +1,20 @@
+#!/bin/sh
+# Root-owned CI reporter bridges the XFCE user's marker to QEMU serial.
+i=0
+while [ "$i" -lt 210 ]; do
+  if [ -s /tmp/mayaos-desktop-ready ]; then
+    read -r details < /tmp/mayaos-desktop-ready
+    printf 'MAYAOS_DESKTOP_OK %s\n' "$details" > /dev/ttyS0
+    exit 0
+  fi
+  i=$((i+1))
+  sleep 1
+done
+{
+  echo 'MAYAOS_DESKTOP_DIAGNOSTICS_BEGIN'
+  systemctl --no-pager status lightdm.service || true
+  journalctl -b -u lightdm.service --no-pager -n 60 || true
+  ps aux | grep -E 'lightdm|Xorg|xfce4-session' || true
+  echo 'MAYAOS_DESKTOP_DIAGNOSTICS_END'
+} > /dev/ttyS0 2>&1
+exit 1
