@@ -60,3 +60,9 @@ xdotool
 network-manager-gnome
 upower
 libnotify-bin
+
+# Phase 2.5 native Qt Quick Python runtime
+python3-pyside6.qtcore
+python3-pyside6.qtgui
+python3-pyside6.qtqml
+python3-pyside6.qtquick
