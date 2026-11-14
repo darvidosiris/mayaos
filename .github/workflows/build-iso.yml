@@ -102,6 +102,10 @@ jobs:
             echo "QEMU terminated unexpectedly with exit $RC"
             exit "$RC"
           fi
+          echo "=== Phase 2.7 diagnostic markers ==="
+          grep -E 'MAYAOS_(INTERACTION|QT_SHELL|LAUNCHER|QUICK_SETTINGS|WINDOW_LIST|DESKTOP|BOOT)' out/qemu-serial.log | tail -n 50 || true
+          echo "=== QEMU monitor tail ==="
+          tail -n 30 out/qemu-monitor.log || true
           if ! grep -q "MAYAOS_BOOT_OK" out/qemu-serial.log; then
             echo "MayaOS guest did not emit its systemd boot marker."
             tail -n 100 out/qemu-serial.log || true
@@ -114,6 +118,9 @@ jobs:
             exit 1
           fi
           echo "Verified XFCE session autostart reached a graphical DISPLAY."
+          if ! grep -q "MAYAOS_INTERACTION_REPORTER_READY" out/qemu-serial.log; then
+            echo "CI guest serial bridge did not report ready; check fw_cfg flag and systemd service."
+          fi
           for marker in MAYAOS_QT_SHELL_OK MAYAOS_LAUNCHER_OK MAYAOS_QUICK_SETTINGS_OK MAYAOS_WINDOW_LIST_OK MAYAOS_INTERACTION_OK; do
             if ! grep -q "$marker" out/qemu-serial.log; then
               echo "Missing Phase 2.7 milestone: $marker"
