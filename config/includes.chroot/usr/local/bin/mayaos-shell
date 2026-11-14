@@ -1,0 +1,88 @@
+#!/usr/bin/env python3
+"""MayaOS Phase 2 desktop dock and app launcher; XFCE remains the fallback."""
+import os
+import shutil
+import subprocess
+import tkinter as tk
+from tkinter import ttk
+
+BG = "#101b2b"
+PANEL = "#17263a"
+GOLD = "#e9c979"
+FG = "#f6f3eb"
+
+def launch(command):
+    executable = shutil.which(command[0])
+    if executable:
+        subprocess.Popen([executable, *command[1:]], start_new_session=True)
+
+root = tk.Tk()
+root.title("MayaOS")
+root.configure(bg=BG)
+root.attributes("-topmost", True)
+root.overrideredirect(True)
+screen_w = root.winfo_screenwidth()
+screen_h = root.winfo_screenheight()
+height = 62
+root.geometry(f"{screen_w}x{height}+0+{screen_h-height}")
+
+dock = tk.Frame(root, bg=PANEL)
+dock.pack(fill="both", expand=True)
+
+launcher = None
+
+def toggle_launcher():
+    global launcher
+    if launcher is not None and launcher.winfo_exists():
+        launcher.destroy()
+        launcher = None
+        return
+    launcher = tk.Toplevel(root)
+    launcher.title("MayaOS Launcher")
+    launcher.configure(bg=BG)
+    launcher.geometry(f"440x430+18+{max(0, screen_h-510)}")
+    launcher.attributes("-topmost", True)
+    tk.Label(launcher, text="MayaOS  •  Applications", bg=BG, fg=GOLD,
+             font=("DejaVu Sans", 17, "bold")).pack(pady=(20, 14))
+    query = tk.StringVar()
+    entry = tk.Entry(launcher, textvariable=query, font=("DejaVu Sans", 12))
+    entry.pack(fill="x", padx=22, pady=(0, 14))
+    apps = [
+        ("Files", ["thunar"]),
+        ("Terminal", ["xfce4-terminal"]),
+        ("Settings", ["xfce4-settings-manager"]),
+        ("Applications", ["xfce4-appfinder"]),
+        ("Task Manager", ["xfce4-taskmanager"]),
+        ("Text Editor", ["mousepad"]),
+        ("Web Browser", ["exo-open", "--launch", "WebBrowser"]),
+    ]
+    container = tk.Frame(launcher, bg=BG)
+    container.pack(fill="both", expand=True, padx=22)
+    def draw(*_):
+        for widget in container.winfo_children():
+            widget.destroy()
+        for name, command in apps:
+            if query.get().casefold() not in name.casefold():
+                continue
+            tk.Button(container, text=name, anchor="w", bg=PANEL, fg=FG,
+                      activebackground=GOLD, relief="flat", padx=12, pady=7,
+                      command=lambda c=command: (launch(c), toggle_launcher())).pack(fill="x", pady=3)
+    query.trace_add("write", draw)
+    draw()
+    entry.focus_set()
+    launcher.bind("<Escape>", lambda _: toggle_launcher())
+
+def button(label, callback):
+    tk.Button(dock, text=label, bg=PANEL, fg=GOLD, relief="flat",
+              activebackground=BG, activeforeground=FG,
+              font=("DejaVu Sans", 11, "bold"), padx=18,
+              command=callback).pack(side="left", fill="y", padx=3, pady=8)
+
+button("☀  MayaOS", toggle_launcher)
+button("Files", lambda: launch(["thunar"]))
+button("Terminal", lambda: launch(["xfce4-terminal"]))
+button("Settings", lambda: launch(["xfce4-settings-manager"]))
+tk.Label(dock, text="MayaOS  •  Phase 2 Preview", bg=PANEL, fg=FG,
+         font=("DejaVu Sans", 10)).pack(side="right", padx=24)
+root.bind("<Escape>", lambda _: launcher.destroy() if launcher and launcher.winfo_exists() else None)
+root.mainloop()
