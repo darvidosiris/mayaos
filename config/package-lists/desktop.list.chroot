@@ -50,3 +50,8 @@ qml6-module-qtqml
 
 # Phase 2 MayaOS desktop preview runtime
 python3-tk
+
+# Phase 2.3 X11 taskbar and window control
+x11-utils
+wmctrl
+xdotool
