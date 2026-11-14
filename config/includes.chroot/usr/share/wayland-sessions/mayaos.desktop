@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=MayaOS (Experimental Wayland)
+Comment=Placeholder session for the future Qt/QML Maya Shell — not ready for daily use
+Exec=mayaos-session
+TryExec=mayaos-session
+Type=Application
+DesktopNames=MayaOS
+X-MayaOS-Experimental=true

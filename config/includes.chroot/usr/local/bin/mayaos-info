@@ -1,0 +1,21 @@
+#!/bin/sh
+# Print MayaOS identity for support / smoke tests.
+set -e
+
+echo "MayaOS info"
+echo "-----------"
+if [ -f /etc/os-release ]; then
+	# shellcheck disable=SC1091
+	. /etc/os-release
+	echo "NAME=${NAME:-unknown}"
+	echo "PRETTY_NAME=${PRETTY_NAME:-unknown}"
+	echo "VERSION=${VERSION:-unknown}"
+	echo "ID=${ID:-unknown}"
+fi
+if [ -f /etc/mayaos/version ]; then
+	echo "MAYAOS_VERSION_FILE=$(cat /etc/mayaos/version)"
+fi
+if [ -f /etc/mayaos/desktop-phase ]; then
+	echo "DESKTOP_PHASE=$(cat /etc/mayaos/desktop-phase)"
+fi
+uname -srm

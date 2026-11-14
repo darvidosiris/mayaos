@@ -1,0 +1,39 @@
+# Build artifacts
+out/
+*.iso
+*.img
+*.qcow2
+*.raw
+*.log
+*.tmp
+
+# live-build working tree (generated under build/)
+build/
+cache/bootstrap/
+cache/apt/
+cache/stages_bootstrap
+.stage/
+chroot/
+binary/
+binary.iso
+binary.hybrid.iso
+live-image-*.hybrid.iso
+live-image-*.iso
+.lock
+.build/
+
+# Editor / OS junk
+*~
+*.swp
+.DS_Store
+.idea/
+.vscode/
+
+# Secrets / local overrides
+.env
+.env.*
+*.local
+
+# QEMU / test scratch
+tests/scratch/
+tests/*.qcow2

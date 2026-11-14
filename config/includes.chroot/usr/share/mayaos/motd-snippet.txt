@@ -1,0 +1,2 @@
+Welcome to MayaOS — Debian 13-based desktop (XFCE temporary desktop).
+Experimental Wayland/Qt shell is under development; prefer the XFCE session.

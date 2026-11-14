@@ -1,0 +1,6 @@
+MayaOS system identity directory.
+
+- version         : release string (synced from repo VERSION at build time)
+- desktop-phase   : xfce-temporary | maya-wayland (future)
+
+Do not remove this directory; hooks and diagnostics expect it.

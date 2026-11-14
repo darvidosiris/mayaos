@@ -1,0 +1,50 @@
+#!/bin/sh
+# Brand the chroot as MayaOS (live image hook).
+set -e
+
+VERSION_FILE="/etc/mayaos/version"
+if [ -f "${VERSION_FILE}" ]; then
+	VERSION="$(cat "${VERSION_FILE}" | tr -d '\n')"
+else
+	VERSION="0.0.0-unknown"
+fi
+
+mkdir -p /etc/mayaos
+
+cat > /etc/os-release <<EOF
+PRETTY_NAME="MayaOS ${VERSION}"
+NAME="MayaOS"
+VERSION_ID="${VERSION}"
+VERSION="${VERSION} (trixie)"
+VERSION_CODENAME="trixie"
+ID=mayaos
+ID_LIKE=debian
+HOME_URL="https://github.com/mayaos/mayaos"
+SUPPORT_URL="https://github.com/mayaos/mayaos/issues"
+BUG_REPORT_URL="https://github.com/mayaos/mayaos/issues"
+EOF
+
+# Keep Debian pedigree discoverable for apt tooling that probes debian_version.
+if [ ! -f /etc/debian_version ]; then
+	echo "trixie/sid" > /etc/debian_version
+fi
+
+cat > /etc/issue <<EOF
+MayaOS ${VERSION} \\n \\l
+
+EOF
+
+cat > /etc/issue.net <<EOF
+MayaOS ${VERSION}
+EOF
+
+echo "mayaos" > /etc/hostname
+
+if [ -f /etc/hosts ]; then
+	# Ensure hostname resolves locally without wiping existing entries.
+	if ! grep -qE '[[:space:]]mayaos($|[[:space:]])' /etc/hosts; then
+		echo "127.0.1.1 mayaos" >> /etc/hosts
+	fi
+fi
+
+echo "I: MayaOS branding applied (version ${VERSION})"

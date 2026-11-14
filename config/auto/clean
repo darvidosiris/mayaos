@@ -1,0 +1,4 @@
+#!/bin/sh
+# MayaOS live-build auto/clean
+set -e
+lb clean noauto "${@}"

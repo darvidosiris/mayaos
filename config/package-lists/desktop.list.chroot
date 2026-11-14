@@ -1,0 +1,49 @@
+# Temporary MayaOS desktop: XFCE + LightDM
+# Future: replace/supplement with Qt/QML Wayland shell packages
+
+# Display manager
+lightdm
+lightdm-gtk-greeter
+
+# XFCE core
+xfce4
+xfce4-terminal
+xfce4-settings
+xfce4-session
+xfce4-panel
+xfce4-whiskermenu-plugin
+xfce4-power-manager
+xfce4-notifyd
+xfce4-screenshooter
+xfce4-taskmanager
+thunar
+thunar-volman
+mousepad
+ristretto
+xfce4-appfinder
+
+# X stack (current default session)
+xorg
+xserver-xorg
+xserver-xorg-input-all
+xserver-xorg-video-all
+
+# Audio
+pulseaudio
+pavucontrol
+
+# Theme / fonts (modest defaults)
+fonts-dejavu
+fonts-liberation
+gtk2-engines-pixbuf
+greybird-gtk-theme
+elementary-xfce-icon-theme
+
+# Wayland / Qt6 runtime scaffolding (not the default session)
+# Dev headers stay off the live image; see desktop/ for build notes.
+qt6-wayland
+qml6-module-qtquick
+qml6-module-qtquick-controls
+qml6-module-qtquick-layouts
+qml6-module-qtquick-window
+qml6-module-qtqml

@@ -1,0 +1,31 @@
+#!/bin/sh
+# Same branding for non-live (normal) builds if used later.
+set -e
+# Re-use live branding logic when present.
+if [ -x /tmp/mayaos-branding-inline ]; then
+	/tmp/mayaos-branding-inline
+fi
+
+VERSION_FILE="/etc/mayaos/version"
+if [ -f "${VERSION_FILE}" ]; then
+	VERSION="$(cat "${VERSION_FILE}" | tr -d '\n')"
+else
+	VERSION="0.0.0-unknown"
+fi
+
+mkdir -p /etc/mayaos
+
+cat > /etc/os-release <<EOF
+PRETTY_NAME="MayaOS ${VERSION}"
+NAME="MayaOS"
+VERSION_ID="${VERSION}"
+VERSION="${VERSION} (trixie)"
+VERSION_CODENAME="trixie"
+ID=mayaos
+ID_LIKE=debian
+HOME_URL="https://github.com/mayaos/mayaos"
+SUPPORT_URL="https://github.com/mayaos/mayaos/issues"
+BUG_REPORT_URL="https://github.com/mayaos/mayaos/issues"
+EOF
+
+echo "I: MayaOS branding applied (normal hook, version ${VERSION})"

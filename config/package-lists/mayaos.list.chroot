@@ -1,0 +1,44 @@
+# MayaOS base utilities (Debian trixie / amd64)
+# Keep lean; desktop packages live in desktop.list.chroot
+
+linux-image-amd64
+live-boot
+live-config
+live-config-systemd
+systemd-sysv
+
+sudo
+locales
+console-setup
+keyboard-configuration
+network-manager
+network-manager-gnome
+wireless-tools
+wpasupplicant
+firmware-linux-free
+# firmware-linux-nonfree pulled when non-free-firmware is available
+
+ca-certificates
+curl
+wget
+rsync
+openssh-client
+vim-tiny
+nano
+less
+htop
+pciutils
+usbutils
+lshw
+fdisk
+parted
+dosfstools
+ntfs-3g
+eject
+
+xdg-user-dirs
+xdg-utils
+dbus-user-session
+
+# Branding / identity helpers
+os-prober

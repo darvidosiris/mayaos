@@ -1,0 +1,8 @@
+#!/bin/sh
+# Experimental MayaOS Wayland session stub.
+# Replaced when desktop/compositor ships a real compositor + shell.
+
+echo "MayaOS Wayland session is not implemented yet." >&2
+echo "Log in with the XFCE session instead." >&2
+notify-send "MayaOS" "Wayland session not implemented — use XFCE." 2>/dev/null || true
+exit 1

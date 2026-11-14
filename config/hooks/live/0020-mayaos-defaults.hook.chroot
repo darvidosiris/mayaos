@@ -1,0 +1,35 @@
+#!/bin/sh
+# Default session / greeter tweaks for temporary XFCE desktop.
+set -e
+
+# Prefer XFCE session when LightDM is present.
+if [ -d /etc/lightdm ]; then
+	mkdir -p /etc/lightdm
+	if [ -f /etc/lightdm/lightdm.conf ]; then
+		:
+	else
+		cat > /etc/lightdm/lightdm.conf <<'EOF'
+[Seat:*]
+greeter-session=lightdm-gtk-greeter
+user-session=xfce
+EOF
+	fi
+
+	# Ensure user-session is xfce even if a stock file existed.
+	if grep -q '^user-session=' /etc/lightdm/lightdm.conf 2>/dev/null; then
+		sed -i 's/^user-session=.*/user-session=xfce/' /etc/lightdm/lightdm.conf
+	else
+		printf '\n[Seat:*]\nuser-session=xfce\n' >> /etc/lightdm/lightdm.conf
+	fi
+fi
+
+# Autologin for live sessions is typically handled by live-config; leave enabled
+# via boot parameters when desired. Do not hard-force autologin here.
+
+# Enable NetworkManager if systemd is present.
+if command -v systemctl >/dev/null 2>&1; then
+	systemctl enable NetworkManager.service 2>/dev/null || true
+	systemctl enable lightdm.service 2>/dev/null || true
+fi
+
+echo "I: MayaOS XFCE defaults applied"

@@ -1,0 +1,37 @@
+#!/bin/sh
+# MayaOS live-build auto/config
+# Invoked by: lb config (from the build tree)
+
+set -e
+
+MIRROR="${MAYAOS_MIRROR:-https://deb.debian.org/debian}"
+SECURITY_MIRROR="${MAYAOS_SECURITY_MIRROR:-https://security.debian.org/debian-security}"
+SUITE="${MAYAOS_SUITE:-trixie}"
+ARCH="${MAYAOS_ARCH:-amd64}"
+
+lb config noauto \
+	--mode debian \
+	--distribution "${SUITE}" \
+	--archive-areas "main contrib non-free non-free-firmware" \
+	--architectures "${ARCH}" \
+	--binary-images iso-hybrid \
+	--bootappend-live "boot=live components quiet splash hostname=mayaos username=mayaos" \
+	--debian-installer none \
+	--debian-installer-gui false \
+	--apt-indices false \
+	--apt-recommends true \
+	--firmware-binary true \
+	--firmware-chroot true \
+	--iso-application "MayaOS" \
+	--iso-publisher "MayaOS Project" \
+	--iso-volume "MayaOS ${SUITE}" \
+	--memtest none \
+	--win32-loader false \
+	--updates true \
+	--security true \
+	--mirror-bootstrap "${MIRROR}" \
+	--mirror-chroot "${MIRROR}" \
+	--mirror-binary "${MIRROR}" \
+	--mirror-chroot-security "${SECURITY_MIRROR}" \
+	--mirror-binary-security "${SECURITY_MIRROR}" \
+	"${@}"
