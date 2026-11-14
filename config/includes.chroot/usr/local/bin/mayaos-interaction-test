@@ -1,0 +1,39 @@
+#!/bin/sh
+# Phase 2.7: real X11 interactions in the live XFCE session.
+# This script is opt-in: enabled only by the CI kernel command line.
+case " $(cat /proc/cmdline) " in
+  *" mayaos.ci=1 "*) ;;
+  *) exit 0 ;;
+esac
+export DISPLAY="${DISPLAY:-:0}"
+report() { printf '%s\n' "$1" > /dev/ttyS0 2>/dev/null || true; }
+fail() { report "MAYAOS_INTERACTION_FAIL $1"; exit 1; }
+i=0
+while [ "$i" -lt 45 ]; do
+  if xdotool search --name '^MayaOS Native Preview$' >/dev/null 2>&1; then break; fi
+  i=$((i+1)); sleep 2
+done
+xdotool search --name '^MayaOS Native Preview$' >/dev/null 2>&1 || fail "native Qt shell not running"
+report MAYAOS_QT_SHELL_OK
+# The dock spans the bottom of the screen. Click the leftmost MayaOS button.
+xdotool mousemove 62 765 click 1 || fail "launcher click"
+sleep 3
+xdotool search --onlyvisible --name '^MayaOS Launcher$' >/dev/null 2>&1 || fail "launcher not visible"
+report MAYAOS_LAUNCHER_OK
+sleep 5
+# Close launcher and open Quick Settings using the visible dock button.
+xdotool mousemove 62 765 click 1 || true
+sleep 1
+xdotool mousemove 1020 765 click 1 || fail "quick settings click"
+sleep 3
+xdotool search --onlyvisible --name '^MayaOS Quick Settings$' >/dev/null 2>&1 || fail "quick settings not visible"
+report MAYAOS_QUICK_SETTINGS_OK
+sleep 5
+# Open an actual application; verify a window exists and the EWMH task list sees it.
+thunar >/tmp/mayaos-test-thunar.log 2>&1 &
+sleep 5
+xdotool search --onlyvisible --class Thunar >/dev/null 2>&1 || fail "Thunar window missing"
+ /usr/local/bin/mayaos-windowctl list | grep -qi 'Thunar\|File Manager' || fail "Thunar absent from taskbar list"
+report MAYAOS_WINDOW_LIST_OK
+sleep 5
+report MAYAOS_INTERACTION_OK
