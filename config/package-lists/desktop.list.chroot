@@ -47,3 +47,6 @@ qml6-module-qtquick-controls
 qml6-module-qtquick-layouts
 qml6-module-qtquick-window
 qml6-module-qtqml
+
+# Phase 2 MayaOS desktop preview runtime
+python3-tk
