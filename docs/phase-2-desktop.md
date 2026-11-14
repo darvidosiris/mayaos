@@ -34,3 +34,8 @@ Rebuild the ISO from the Phase 2 branch and inspect `mayaos-desktop-preview` scr
 The dock now includes a Quick Settings popup displaying NetworkManager connectivity, PulseAudio volume, and UPower battery percentage when available. Buttons open network connection editing, volume controls, and XFCE notification preferences. This is not yet a full system tray or notification history. Notification popups remain provided by xfce4-notifyd. Missing hardware/services display unavailable states rather than fabricated values.
 
 The Phase 2.3 window list also now parses tab-separated window entries correctly. Validate by launching Terminal and Files and checking their taskbar entries, then test the Quick Settings popup interactively. Automated idle screenshots alone do not prove these interactions.
+
+## Phase 2.5 — Qt Quick native preview
+The default XFCE autostart entry launches `mayaos-shell-start`, which tries the PySide6 Qt Quick shell and falls back to the proven Tk dock if Qt fails to initialize. The native dock includes app shortcuts, searchable launcher, EWMH running-window list, clock, and quick settings. The XFCE window manager and LightDM remain in place. Qt startup failures are logged to `/tmp/mayaos-qt-shell.log`.
+
+Set `MAYAOS_SHELL_BACKEND=tk` to force the previous dock. This is a native Qt Quick **preview**, not a complete compositor or Wayland desktop environment. Test the new build in QEMU and verify that the Qt shell—not the Tk fallback—is running before considering this phase validated.
