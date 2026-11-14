@@ -55,3 +55,8 @@ python3-tk
 x11-utils
 wmctrl
 xdotool
+
+# Phase 2.4 quick settings tools
+network-manager-gnome
+upower
+libnotify-bin
