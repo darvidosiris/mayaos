@@ -84,15 +84,52 @@ button("☀  MayaOS", toggle_launcher)
 button("Files", lambda: launch(["thunar"]))
 button("Terminal", lambda: launch(["xfce4-terminal"]))
 button("Settings", lambda: launch(["xfce4-settings-manager"]))
+# Phase 2.3: running windows are enumerated through the X11 EWMH protocol.
+task_area = tk.Frame(dock, bg=PANEL)
+task_area.pack(side="left", fill="both", expand=True, padx=12)
+task_signature = None
+
+def refresh_windows():
+    global task_signature
+    try:
+        output = subprocess.check_output(
+            ["/usr/local/bin/mayaos-windowctl", "list"],
+            text=True, stderr=subprocess.DEVNULL, timeout=4)
+        windows = []
+        for line in output.splitlines():
+            if "\\t" in line:
+                wid, name = line.split("\\t", 1)
+                windows.append((wid, name))
+        windows = windows[:7]
+        signature = tuple(windows)
+        if signature != task_signature:
+            task_signature = signature
+            for child in task_area.winfo_children():
+                child.destroy()
+            for wid, name in windows:
+                short = name[:19] + ("…" if len(name) > 19 else "")
+                item = tk.Frame(task_area, bg=PANEL)
+                item.pack(side="left", padx=2, pady=9)
+                tk.Button(item, text=short, bg=BG, fg=FG, relief="flat",
+                          font=("DejaVu Sans", 9), padx=8,
+                          command=lambda w=wid: launch(["/usr/local/bin/mayaos-windowctl", "activate", w])).pack(side="left")
+                tk.Button(item, text="_", bg=PANEL, fg=GOLD, relief="flat",
+                          font=("DejaVu Sans", 9), padx=3,
+                          command=lambda w=wid: launch(["/usr/local/bin/mayaos-windowctl", "minimize", w])).pack(side="left")
+    except (OSError, subprocess.SubprocessError):
+        pass
+    root.after(2500, refresh_windows)
+refresh_windows()
+
 clock = tk.Label(dock, bg=PANEL, fg=FG, font=("DejaVu Sans", 11, "bold"))
 clock.pack(side="right", padx=18)
 def update_clock():
     clock.configure(text=datetime.now().strftime("%a %b %d  •  %I:%M %p"))
     root.after(10000, update_clock)
 update_clock()
-tk.Button(dock, text="⏻  Session", bg=PANEL, fg=GOLD, relief="flat",
+tk.Button(dock, text="Session", bg=PANEL, fg=GOLD, relief="flat",
           font=("DejaVu Sans", 10), command=lambda: launch(["xfce4-session-logout"])).pack(side="right", padx=10)
-tk.Button(dock, text="🔊  Sound", bg=PANEL, fg=GOLD, relief="flat",
+tk.Button(dock, text="Sound", bg=PANEL, fg=GOLD, relief="flat",
           font=("DejaVu Sans", 10), command=lambda: launch(["pavucontrol"])).pack(side="right", padx=8)
 tk.Label(dock, text="MayaOS", bg=PANEL, fg=GOLD,
          font=("DejaVu Sans", 10, "bold")).pack(side="right", padx=12)
