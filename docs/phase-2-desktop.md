@@ -29,3 +29,8 @@ To disable it persistently in a customized installation, remove
 - This does not remove XFCE packages or replace the display manager
 
 Rebuild the ISO from the Phase 2 branch and inspect `mayaos-desktop-preview` screenshots in the GitHub Actions run artifacts. If the wallpaper is missing, inspect xfdesktop's monitor-specific xfconf properties; not all XFCE configurations use the same paths.
+
+## Phase 2.4 — quick settings preview
+The dock now includes a Quick Settings popup displaying NetworkManager connectivity, PulseAudio volume, and UPower battery percentage when available. Buttons open network connection editing, volume controls, and XFCE notification preferences. This is not yet a full system tray or notification history. Notification popups remain provided by xfce4-notifyd. Missing hardware/services display unavailable states rather than fabricated values.
+
+The Phase 2.3 window list also now parses tab-separated window entries correctly. Validate by launching Terminal and Files and checking their taskbar entries, then test the Quick Settings popup interactively. Automated idle screenshots alone do not prove these interactions.
