@@ -81,6 +81,8 @@ jobs:
           ISO="$(find out -maxdepth 1 -type f -name '*.iso' -print -quit)"
           test -n "$ISO" || { echo "No ISO artifact found"; exit 1; }
           echo "Starting headless QEMU boot smoke test for $ISO"
+          sudo chown -R "$(id -u):$(id -g)" out
+          test -w out || { echo "ISO output directory is not writable"; exit 1; }
           set +e
           timeout --signal=TERM --kill-after=10s 90s \
             qemu-system-x86_64 \
