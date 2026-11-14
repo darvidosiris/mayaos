@@ -115,6 +115,24 @@ jobs:
           echo "Verified XFCE session autostart reached a graphical DISPLAY."
           echo "Desktop visual usability still requires screenshot/manual inspection."
 
+      - name: Convert QEMU screenshots to PNG previews
+        if: always()
+        run: |
+          python3 scripts/ci-ppm-to-png.py
+          ls -lh out/*.png 2>/dev/null || true
+
+      - name: Upload desktop preview screenshots
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mayaos-desktop-preview
+          path: |
+            out/*.png
+            out/qemu-monitor.log
+            out/qemu-serial.log
+          if-no-files-found: warn
+          retention-days: 14
+
       - name: Upload ISO artifacts
         uses: actions/upload-artifact@v4
         if: always()
