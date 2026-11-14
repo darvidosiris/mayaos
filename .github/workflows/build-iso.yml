@@ -57,29 +57,22 @@ jobs:
           sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc || true
           df -h
 
-      - name: Install live-build stack
+      - name: Build ISO in Debian 13 (Trixie)
         run: |
-          sudo apt-get update
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
-            live-build debootstrap squashfs-tools xorriso \
-            isolinux syslinux-common grub-pc-bin grub-efi-amd64-bin \
-            mtools dosfstools ca-certificates curl rsync
-
-      - name: Note suite limitations
-        run: |
-          echo "Building Debian trixie images from Ubuntu runners may require"
-          echo "a recent debootstrap. If bootstrap fails, use a Debian trixie"
-          echo "container/VM or pin a newer debootstrap package."
-          debootstrap --version || true
-          lb --version || true
-
-      - name: Build ISO
-        run: |
-          chmod +x scripts/*.sh scripts/lib/*.sh \
-            config/auto/config config/auto/clean \
-            config/hooks/**/*.hook.chroot \
-            config/includes.chroot/usr/local/bin/* || true
-          sudo ./scripts/build-iso.sh --skip-deps-check
+          docker run --rm --privileged \
+            -v "${{ github.workspace }}:/workspace" \
+            -w /workspace \
+            debian:trixie bash -euc '
+              export DEBIAN_FRONTEND=noninteractive
+              apt-get update
+              apt-get install -y \
+                live-build debootstrap squashfs-tools xorriso \
+                isolinux syslinux-common grub-pc-bin grub-efi-amd64-bin \
+                mtools dosfstools ca-certificates curl rsync
+              lb --version
+              chmod +x scripts/*.sh scripts/lib/*.sh config/auto/config config/auto/clean
+              ./scripts/build-iso.sh --skip-deps-check
+            '
 
       - name: Upload ISO artifacts
         uses: actions/upload-artifact@v4
