@@ -74,6 +74,30 @@ jobs:
               ./scripts/build-iso.sh --skip-deps-check
             '
 
+      - name: QEMU headless boot smoke test
+        run: |
+          sudo apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y qemu-system-x86
+          ISO="$(find out -maxdepth 1 -type f -name '*.iso' -print -quit)"
+          test -n "$ISO" || { echo "No ISO artifact found"; exit 1; }
+          echo "Starting headless QEMU boot smoke test for $ISO"
+          set +e
+          timeout --signal=TERM --kill-after=10s 90s \
+            qemu-system-x86_64 \
+              -machine accel=tcg -m 2048 -smp 2 \
+              -cdrom "$ISO" -boot d \
+              -display none -serial file:out/qemu-serial.log \
+              -monitor none -no-reboot \
+              -nic none
+          RC=$?
+          set -e
+          if [ "$RC" -ne 0 ] && [ "$RC" -ne 124 ]; then
+            echo "QEMU terminated unexpectedly with exit $RC"
+            exit "$RC"
+          fi
+          echo "QEMU smoke window completed (exit $RC)."
+          echo "This only verifies VM execution; desktop boot is NOT yet certified."
+
       - name: Upload ISO artifacts
         uses: actions/upload-artifact@v4
         if: success()
@@ -83,6 +107,7 @@ jobs:
             out/*.iso
             out/*.sha256
             out/build-*.log
+            out/qemu-serial.log
           if-no-files-found: warn
           retention-days: 14
 
