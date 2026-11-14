@@ -1,0 +1,13 @@
+[Unit]
+Description=MayaOS live XFCE graphical readiness reporting
+After=lightdm.service
+Wants=lightdm.service
+ConditionKernelCommandLine=boot=live
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/mayaos-desktop-report
+TimeoutStartSec=230
+
+[Install]
+WantedBy=multi-user.target
