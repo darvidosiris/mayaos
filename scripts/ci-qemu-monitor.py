@@ -26,8 +26,6 @@ for at, cmd in [
     (17, "sendkey ret"),
     (45, "screendump " + os.path.abspath(output + "/qemu-boot-45s.ppm")),
     (110, "screendump " + os.path.abspath(output + "/qemu-boot-110s.ppm")),
-    (180, "screendump " + os.path.abspath(output + "/mayaos-desktop-180s.ppm")),
-    (220, "screendump " + os.path.abspath(output + "/mayaos-desktop-220s.ppm")),
 ]:
     time.sleep(max(0, at - (time.monotonic() - start)))
     print(f"QEMU {at}s: {cmd}: {command(cmd)}", flush=True)
@@ -39,7 +37,12 @@ milestones = {
     "MAYAOS_WINDOW_LIST_OK": "mayaos-running-window.ppm",
 }
 captured = set()
-while time.monotonic() - start < 235 and len(captured) < len(milestones):
+standard = {180: "mayaos-desktop-180s.ppm", 220: "mayaos-desktop-220s.ppm"}
+while time.monotonic() - start < 235:
+    for at, filename in standard.items():
+        if time.monotonic() - start >= at and at not in captured:
+            command("screendump " + os.path.abspath(output + "/" + filename))
+            captured.add(at)
     try:
         with open(output + "/qemu-serial.log", "r", errors="replace") as log:
             serial = log.read()
