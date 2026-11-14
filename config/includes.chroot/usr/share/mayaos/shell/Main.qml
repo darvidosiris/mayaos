@@ -19,16 +19,36 @@ Window {
     property color textColor: "#f6f3eb"
     property bool launcherOpen: false
     property bool settingsOpen: false
+    property bool reduceMotion: true
+    Shortcut {
+        sequences: ["Ctrl+Space"]
+        onActivated: {
+            shell.launcherOpen = !shell.launcherOpen
+            shell.settingsOpen = false
+        }
+    }
+    Shortcut {
+        sequences: ["Escape"]
+        onActivated: {
+            shell.launcherOpen = false
+            shell.settingsOpen = false
+        }
+    }
 
     component DockButton: Button {
         id: control
         font.pixelSize: 14
+        focusPolicy: Qt.StrongFocus
+        Accessible.name: text
+        ToolTip.visible: hovered
+        ToolTip.text: text
+        ToolTip.delay: 700
         palette.buttonText: shell.gold
         background: Rectangle {
             radius: 8
             color: control.hovered ? "#29425a" : "#101b2b"
-            border.color: "#4c6072"
-            border.width: 1
+            border.color: control.activeFocus ? shell.gold : "#4c6072"
+            border.width: control.activeFocus ? 2 : 1
         }
         implicitHeight: 42
         leftPadding: 14
@@ -41,14 +61,14 @@ Window {
         RowLayout {
             anchors.fill: parent
             anchors.margins: 9
-            spacing: 8
+            spacing: shell.width < 950 ? 4 : 8
             DockButton {
                 text: "☀  MayaOS"
                 onClicked: { shell.launcherOpen = !shell.launcherOpen; shell.settingsOpen = false }
             }
             DockButton { text: "Files"; onClicked: mayaBridge.launch("files") }
             DockButton { text: "Terminal"; onClicked: mayaBridge.launch("terminal") }
-            DockButton { text: "Settings"; onClicked: mayaBridge.launch("settings") }
+            DockButton { text: "Settings"; visible: shell.width >= 800; onClicked: mayaBridge.launch("settings") }
             Flickable {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 46
@@ -74,21 +94,22 @@ Window {
                 }
             }
             DockButton {
-                text: "Quick Settings"
+                text: shell.width < 800 ? "Controls" : "Quick Settings"
                 onClicked: { shell.settingsOpen = !shell.settingsOpen; shell.launcherOpen = false }
             }
-            Text { text: mayaBridge.clock; color: shell.textColor; font.pixelSize: 13 }
+            Text { text: mayaBridge.clock; color: shell.textColor; font.pixelSize: shell.width < 850 ? 11 : 13 }
         }
     }
 
     Window {
         id: launcher
         visible: shell.launcherOpen
+        onVisibleChanged: if (visible) search.forceActiveFocus()
         title: "MayaOS Launcher"
         flags: Qt.Tool | Qt.WindowStaysOnTopHint
         color: "#101b2b"
-        width: 360
-        height: 390
+        width: Math.min(400, Screen.width - 24)
+        height: Math.min(420, Screen.height - shell.height - 30)
         x: 12
         y: Screen.height - height - shell.height - 10
         ColumnLayout {
@@ -96,7 +117,13 @@ Window {
             anchors.margins: 18
             spacing: 12
             Text { text: "MayaOS Applications"; color: shell.gold; font.pixelSize: 20 }
-            TextField { id: search; Layout.fillWidth: true; placeholderText: "Search applications" }
+            TextField {
+                id: search
+                Layout.fillWidth: true
+                placeholderText: "Search applications"
+                Accessible.name: "Search MayaOS applications"
+                Keys.onEscapePressed: shell.launcherOpen = false
+            }
             Repeater {
                 model: [
                     { label: "Files", key: "files" },
@@ -123,7 +150,7 @@ Window {
         title: "MayaOS Quick Settings"
         flags: Qt.Tool | Qt.WindowStaysOnTopHint
         color: "#101b2b"
-        width: 390
+        width: Math.min(390, Screen.width - 24)
         height: 240
         x: Screen.width - width - 12
         y: Screen.height - height - shell.height - 10
