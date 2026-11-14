@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=MayaOS CI Interaction Tests
+Exec=/usr/local/bin/mayaos-interaction-test
+OnlyShowIn=XFCE;
+Terminal=false
+NoDisplay=true
+X-GNOME-Autostart-enabled=true
