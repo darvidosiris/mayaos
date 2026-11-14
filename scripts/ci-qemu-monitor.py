@@ -26,6 +26,8 @@ for at, cmd in [
     (17, "sendkey ret"),
     (45, "screendump " + os.path.abspath(output + "/qemu-boot-45s.ppm")),
     (110, "screendump " + os.path.abspath(output + "/qemu-boot-110s.ppm")),
+    (180, "screendump " + os.path.abspath(output + "/mayaos-desktop-180s.ppm")),
+    (220, "screendump " + os.path.abspath(output + "/mayaos-desktop-220s.ppm")),
 ]:
     time.sleep(max(0, at - (time.monotonic() - start)))
     print(f"QEMU {at}s: {cmd}: {command(cmd)}", flush=True)
