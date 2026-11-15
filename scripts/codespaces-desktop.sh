@@ -31,20 +31,18 @@ if [[ -z "$ISO" ]]; then
     gh run list --repo "$REPO" --workflow build-iso.yml --limit 10 || true
     exit 1
   fi
-  echo "Found ISO artifact ID $ARTIFACT_ID. Downloading ZIP directly..."
-  ZIP_PATH="$ARTIFACT_DIR/mayaos-iso-$ARTIFACT_ID.zip"
-  if ! gh api "repos/$REPO/actions/artifacts/$ARTIFACT_ID/zip" > "$ZIP_PATH"; then
-    rm -f "$ZIP_PATH"
-    echo "GitHub API artifact download failed; error shown above. Verify gh auth status and artifact access." >&2
+  echo "Found ISO artifact ID $ARTIFACT_ID."
+  echo "Downloading with GitHub's supported workflow-artifact downloader..."
+  # gh api /actions/artifacts/{id}/zip returns a redirect and is not a reliable
+  # binary downloader. gh run download handles the redirect and ZIP extraction.
+  if ! gh run download --repo "$REPO" --name mayaos-iso --dir "$ARTIFACT_DIR"; then
+    echo "Automatic download failed. Checking authentication and artifact metadata:" >&2
+    gh auth status || true
+    gh api "repos/$REPO/actions/artifacts/$ARTIFACT_ID" \
+      --jq '{id,name,size_in_bytes,expired,workflow_run}' || true
+    echo "If GitHub reports an HTTP error above, send the exact error message." >&2
     exit 1
   fi
-  if ! unzip -tq "$ZIP_PATH" >/dev/null; then
-    echo "Downloaded artifact is not a valid ZIP. Check API authentication and artifact availability." >&2
-    rm -f "$ZIP_PATH"
-    exit 1
-  fi
-  unzip -o "$ZIP_PATH" -d "$ARTIFACT_DIR"
-  rm -f "$ZIP_PATH"
   ISO="$(find "$ARTIFACT_DIR" -type f -name '*.iso' -print -quit)"
 fi
 if [[ -z "$ISO" ]]; then
