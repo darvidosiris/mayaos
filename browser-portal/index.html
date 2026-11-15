@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MayaOS — Desktop Access</title>
+<link rel="stylesheet" href="/style.css">
+<script src="/portal.js" defer></script>
+</head>
+<body>
+<main class="shell">
+<header><div class="sun">☀</div><div><h1>MayaOS</h1><p>Desktop access portal · Phase 3.1</p></div></header>
+<section class="panel" aria-labelledby="connection-title">
+<h2 id="connection-title">Connect to your MayaOS desktop</h2>
+<p>This portal is online-ready. The actual MayaOS virtual machine must run on a separate Linux host with an authenticated HTTPS noVNC endpoint.</p>
+<label for="endpoint">Private noVNC HTTPS address</label>
+<div class="entry"><input id="endpoint" type="url" inputmode="url" placeholder="https://desktop.example.com/vnc.html" autocomplete="off"><button id="connect" type="button">Open desktop</button></div>
+<p id="message" role="status" aria-live="polite">No virtual machine connected yet.</p>
+<p class="hint">For security, enter only an HTTPS address you control. This portal does not store the address or your VNC credentials.</p>
+</section>
+<section class="panel secondary"><h2>How it works</h2><ol><li>Build the MayaOS ISO with GitHub Actions.</li><li>Start the ISO using the Phase 3.1 QEMU/noVNC launcher on a Linux host.</li><li>Protect that host with HTTPS and authentication, then enter its noVNC address above.</li></ol><p>Netlify hosts this portal, not the running virtual machine. Never expose an unauthenticated VNC service publicly.</p></section>
+<footer>MayaOS · Navy &amp; Gold · <a href="https://github.com/darvidosiris/mayaos">Source repository</a></footer>
+</main>
+</body>
+</html>
