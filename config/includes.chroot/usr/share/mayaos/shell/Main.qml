@@ -20,6 +20,7 @@ Window {
     property bool launcherOpen: false
     property bool settingsOpen: false
     property bool reduceMotion: true
+    property int dockButtonWidth: shell.width < 950 ? 110 : 150
     Shortcut {
         sequences: ["Ctrl+Space"]
         onActivated: {
@@ -74,6 +75,8 @@ Window {
                 Layout.preferredHeight: 46
                 clip: true
                 contentWidth: windowsRow.implicitWidth
+                boundsBehavior: Flickable.StopAtBounds
+                interactive: contentWidth > width
                 Row {
                     id: windowsRow
                     spacing: 5
@@ -83,10 +86,16 @@ Window {
                             spacing: 2
                             DockButton {
                                 text: modelData.title
+                                width: shell.dockButtonWidth
+                                elide: Text.ElideRight
                                 onClicked: mayaBridge.activate(modelData.wid)
                             }
                             DockButton {
                                 text: "–"
+                                Accessible.name: "Minimize " + modelData.title
+                                ToolTip.text: "Minimize " + modelData.title
+                                leftPadding: 8
+                                rightPadding: 8
                                 onClicked: mayaBridge.minimize(modelData.wid)
                             }
                         }
