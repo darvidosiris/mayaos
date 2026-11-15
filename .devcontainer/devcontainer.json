@@ -1,0 +1,23 @@
+{
+  "name": "MayaOS Browser Desktop",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "forwardPorts": [
+    6080
+  ],
+  "portsAttributes": {
+    "6080": {
+      "label": "MayaOS Desktop (private)",
+      "onAutoForward": "notify"
+    }
+  },
+  "postCreateCommand": "bash -n scripts/run-browser-desktop.sh && bash -n scripts/codespaces-desktop.sh",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  }
+}
