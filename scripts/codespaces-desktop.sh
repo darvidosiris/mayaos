@@ -21,21 +21,30 @@ if [[ -z "$ISO" ]]; then
   echo "Searching GitHub Actions for a downloadable mayaos-iso artifact..."
   # Artifact lookup is more reliable than filtering runs by event/branch/status:
   # the run may be associated with a pull_request or the default branch.
-  ARTIFACT="$(gh api --paginate "repos/$REPO/actions/artifacts?per_page=100" \
-    --jq '[.artifacts[] | select(.name == "mayaos-iso" and .expired == false)] | .[0] | [.workflow_run.id, .id] | @tsv' 2>/dev/null | awk 'NF {print; exit}' || true)"
-  if [[ -z "$ARTIFACT" || "$ARTIFACT" == "null" ]]; then
+  # Use artifact IDs directly: workflow_run can be null on some artifact records,
+  # and gh run download may fail even when the artifact itself is available.
+  ARTIFACT_ID="$(gh api "repos/$REPO/actions/artifacts?per_page=100" \
+    --jq '[.artifacts[] | select(.name == "mayaos-iso" and .expired == false)] | sort_by(.created_at) | reverse | .[0].id // empty')"
+  if [[ -z "$ARTIFACT_ID" ]]; then
     echo "No unexpired mayaos-iso artifact found. A green Validate job alone does not produce an ISO." >&2
-    echo "Check the Build live ISO job and artifact upload in: https://github.com/$REPO/actions/workflows/build-iso.yml" >&2
-    echo "Recent workflow runs:" >&2
+    echo "Check Build live ISO and Upload ISO artifacts at https://github.com/$REPO/actions/workflows/build-iso.yml" >&2
     gh run list --repo "$REPO" --workflow build-iso.yml --limit 10 || true
     exit 1
   fi
-  RUN_ID="${ARTIFACT%%$'\t'*}"
-  echo "Found ISO artifact on workflow run $RUN_ID. Downloading..."
-  if ! gh run download "$RUN_ID" --repo "$REPO" --name mayaos-iso --dir "$ARTIFACT_DIR"; then
-    echo "Artifact download failed. Check GitHub CLI access, workflow artifact expiration and the run's uploaded files." >&2
+  echo "Found ISO artifact ID $ARTIFACT_ID. Downloading ZIP directly..."
+  ZIP_PATH="$ARTIFACT_DIR/mayaos-iso-$ARTIFACT_ID.zip"
+  if ! gh api "repos/$REPO/actions/artifacts/$ARTIFACT_ID/zip" > "$ZIP_PATH"; then
+    rm -f "$ZIP_PATH"
+    echo "GitHub API artifact download failed; error shown above. Verify gh auth status and artifact access." >&2
     exit 1
   fi
+  if ! unzip -tq "$ZIP_PATH" >/dev/null; then
+    echo "Downloaded artifact is not a valid ZIP. Check API authentication and artifact availability." >&2
+    rm -f "$ZIP_PATH"
+    exit 1
+  fi
+  unzip -o "$ZIP_PATH" -d "$ARTIFACT_DIR"
+  rm -f "$ZIP_PATH"
   ISO="$(find "$ARTIFACT_DIR" -type f -name '*.iso' -print -quit)"
 fi
 if [[ -z "$ISO" ]]; then
