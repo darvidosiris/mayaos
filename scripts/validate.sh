@@ -114,6 +114,18 @@ for s in "${SCRIPTS[@]}"; do
 	esac
 done
 
+# Validate CI-only guest scripts before the expensive ISO build.
+for s in \
+  config/includes.chroot/usr/local/bin/mayaos-interaction-test \
+  config/includes.chroot/usr/local/bin/mayaos-interaction-report \
+  config/includes.chroot/usr/local/bin/mayaos-windowctl; do
+  if sh -n "${ROOT}/${s}"; then
+    ok "sh -n ${s}"
+  else
+    bad "sh -n ${s}"
+  fi
+done
+
 # auto/config should mention trixie and iso-hybrid
 if grep -q 'trixie' "${ROOT}/config/auto/config" && grep -q 'iso-hybrid' "${ROOT}/config/auto/config"; then
 	ok "live-build auto/config targets trixie iso-hybrid"
