@@ -49,6 +49,7 @@ REQUIRED_PATHS=(
 	config/includes.chroot/usr/share/wayland-sessions/mayaos.desktop
 	desktop/README.md
 	scripts/check-chromebook.sh
+	scripts/run-browser-desktop.sh
 	scripts/check-deps.sh
 	scripts/build-iso.sh
 	scripts/test-qemu.sh
