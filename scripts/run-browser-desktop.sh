@@ -22,13 +22,26 @@ fi
 [[ "$WEB_PORT" =~ ^[0-9]+$ ]] || { echo "Invalid web port" >&2; exit 2; }
 ACCEL=tcg
 if [[ -r /dev/kvm && -w /dev/kvm ]]; then ACCEL=kvm; fi
+# Codespaces often has no KVM. Avoid emulating extra virtual CPUs and
+# excessive display updates in the slow software-emulation fallback.
+if [[ "$ACCEL" == "tcg" ]]; then
+  VM_CPUS="${MAYAOS_VM_CPUS:-1}"
+  VM_MEMORY="${MAYAOS_VM_MEMORY:-2048}"
+  MACHINE_ARGS=(-machine accel=tcg -cpu max -smp "$VM_CPUS")
+else
+  VM_CPUS="${MAYAOS_VM_CPUS:-2}"
+  VM_MEMORY="${MAYAOS_VM_MEMORY:-2048}"
+  MACHINE_ARGS=(-machine accel=kvm -cpu host -smp "$VM_CPUS")
+fi
+[[ "$VM_CPUS" =~ ^[1-9][0-9]*$ ]] || { echo "Invalid MAYAOS_VM_CPUS" >&2; exit 2; }
+[[ "$VM_MEMORY" =~ ^[1-9][0-9]*$ ]] || { echo "Invalid MAYAOS_VM_MEMORY" >&2; exit 2; }
 echo "Starting MayaOS with $ACCEL acceleration; web UI on $WEB_BIND:$WEB_PORT"
 if [[ "$WEB_BIND" == "0.0.0.0" ]]; then
   echo "WARNING: Bind-all is only for a PRIVATE, authenticated port forwarding service such as GitHub Codespaces."
 else
   echo "Access from your Chromebook using an SSH tunnel, not a public port."
 fi
-qemu-system-x86_64 -machine "accel=$ACCEL" -m 2048 -smp 2 \
+qemu-system-x86_64 "${MACHINE_ARGS[@]}" -m "$VM_MEMORY" \
   -cdrom "$ISO" -boot d -vga std -display none \
   -vnc "127.0.0.1:$VNC_DISPLAY" -nic user,model=e1000 &
 QEMU_PID=$!
