@@ -13,6 +13,8 @@ APPS = {
     "files": ["thunar"],
     "terminal": ["xfce4-terminal"],
     "settings": ["xfce4-settings-manager"],
+    "appearance": ["xfce4-appearance-settings"],
+    "display": ["xfce4-display-settings"],
     "sound": ["pavucontrol"],
     "session": ["xfce4-session-logout"],
     "network": ["nm-connection-editor"],
