@@ -19,6 +19,7 @@ Window {
     property color textColor: "#f6f3eb"
     property bool launcherOpen: false
     property bool settingsOpen: false
+    property bool hubOpen: false
     property bool reduceMotion: true
     property int dockButtonWidth: shell.width < 950 ? 110 : 150
     Shortcut {
@@ -69,7 +70,7 @@ Window {
             }
             DockButton { text: "Files"; onClicked: mayaBridge.launch("files") }
             DockButton { text: "Terminal"; onClicked: mayaBridge.launch("terminal") }
-            DockButton { text: "Settings"; visible: shell.width >= 800; onClicked: mayaBridge.launch("settings") }
+            DockButton { text: "Settings"; visible: shell.width >= 800; onClicked: { shell.hubOpen = !shell.hubOpen; shell.launcherOpen = false; shell.settingsOpen = false } }
             Flickable {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 46
@@ -137,7 +138,7 @@ Window {
                 model: [
                     { label: "Files", key: "files" },
                     { label: "Terminal", key: "terminal" },
-                    { label: "Settings", key: "settings" },
+                    { label: "System Settings", key: "maya-settings" },
                     { label: "Sound", key: "sound" },
                     { label: "Network", key: "network" },
                     { label: "Notifications", key: "notifications" }
@@ -147,12 +148,73 @@ Window {
                     visible: modelData.label.toLowerCase().includes(search.text.toLowerCase())
                     text: modelData.label
                     Layout.fillWidth: true
-                    onClicked: { mayaBridge.launch(modelData.key); shell.launcherOpen = false }
+                    onClicked: { if (modelData.key === "maya-settings") { shell.hubOpen = true } else { mayaBridge.launch(modelData.key) }; shell.launcherOpen = false }
                 }
             }
             Item { Layout.fillHeight: true }
         }
     }
+    // Phase 3.0: MayaOS-owned settings dashboard, with safe XFCE-backed controls.
+    Window {
+        id: settingsHub
+        visible: shell.hubOpen
+        title: "MayaOS System Settings"
+        flags: Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
+        color: "#101b2b"
+        width: Math.min(540, Screen.width - 24)
+        height: Math.min(460, Screen.height - shell.height - 24)
+        x: Math.max(8, Math.floor((Screen.width - width) / 2))
+        y: Math.max(8, Math.floor((Screen.height - height - shell.height) / 2))
+        Rectangle {
+            anchors.fill: parent
+            color: "transparent"
+            radius: 12
+            border.color: "#4c6072"
+            border.width: 2
+        }
+        ColumnLayout {
+            anchors.fill: parent
+            anchors.margins: 20
+            spacing: 12
+            RowLayout {
+                Layout.fillWidth: true
+                Text { text: "MayaOS System Settings"; color: shell.gold; font.pixelSize: 22; Layout.fillWidth: true }
+                DockButton { text: "Close"; onClicked: shell.hubOpen = false }
+            }
+            Text {
+                text: "Desktop and device controls"
+                color: shell.textColor
+                font.pixelSize: 14
+            }
+            Text {
+                text: mayaBridge.status
+                color: shell.textColor
+                wrapMode: Text.Wrap
+                Layout.fillWidth: true
+            }
+            GridLayout {
+                columns: settingsHub.width < 430 ? 1 : 2
+                columnSpacing: 12
+                rowSpacing: 12
+                Layout.fillWidth: true
+                DockButton { text: "Appearance"; Layout.fillWidth: true; onClicked: mayaBridge.launch("appearance") }
+                DockButton { text: "Display"; Layout.fillWidth: true; onClicked: mayaBridge.launch("display") }
+                DockButton { text: "Network"; Layout.fillWidth: true; onClicked: mayaBridge.launch("network") }
+                DockButton { text: "Sound"; Layout.fillWidth: true; onClicked: mayaBridge.launch("sound") }
+                DockButton { text: "Notifications"; Layout.fillWidth: true; onClicked: mayaBridge.launch("notifications") }
+                DockButton { text: "All XFCE Settings"; Layout.fillWidth: true; onClicked: mayaBridge.launch("settings") }
+            }
+            Item { Layout.fillHeight: true }
+            Text {
+                text: "MayaOS 3.0 preview • Settings open the installed system tools."
+                color: "#b5c2cf"
+                font.pixelSize: 12
+                wrapMode: Text.Wrap
+                Layout.fillWidth: true
+            }
+        }
+    }
+
     Window {
         id: quickSettings
         visible: shell.settingsOpen
