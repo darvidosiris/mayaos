@@ -1,0 +1,193 @@
+#!/usr/bin/env python3
+"""MayaOS Phase 2 desktop dock and app launcher; XFCE remains the fallback."""
+import os
+import shutil
+import subprocess
+import tkinter as tk
+from datetime import datetime
+
+BG = "#101b2b"
+PANEL = "#17263a"
+GOLD = "#e9c979"
+FG = "#f6f3eb"
+
+def launch(command):
+    executable = shutil.which(command[0])
+    if executable:
+        subprocess.Popen([executable, *command[1:]], start_new_session=True)
+
+subprocess.Popen(["/usr/local/bin/mayaos-appearance"], start_new_session=True)
+
+root = tk.Tk()
+root.title("MayaOS")
+root.configure(bg=BG)
+root.attributes("-topmost", True)
+root.overrideredirect(True)
+screen_w = root.winfo_screenwidth()
+screen_h = root.winfo_screenheight()
+height = 62
+root.geometry(f"{screen_w}x{height}+0+{screen_h-height}")
+
+dock = tk.Frame(root, bg=PANEL)
+dock.pack(fill="both", expand=True)
+
+launcher = None
+
+def toggle_launcher():
+    global launcher
+    if launcher is not None and launcher.winfo_exists():
+        launcher.destroy()
+        launcher = None
+        return
+    launcher = tk.Toplevel(root)
+    launcher.title("MayaOS Launcher")
+    launcher.configure(bg=BG)
+    launcher.geometry(f"440x430+18+{max(0, screen_h-510)}")
+    launcher.attributes("-topmost", True)
+    tk.Label(launcher, text="MayaOS  •  Applications", bg=BG, fg=GOLD,
+             font=("DejaVu Sans", 17, "bold")).pack(pady=(20, 14))
+    query = tk.StringVar()
+    entry = tk.Entry(launcher, textvariable=query, font=("DejaVu Sans", 12))
+    entry.pack(fill="x", padx=22, pady=(0, 14))
+    apps = [
+        ("Files", ["thunar"]),
+        ("Terminal", ["xfce4-terminal"]),
+        ("Settings", ["xfce4-settings-manager"]),
+        ("Applications", ["xfce4-appfinder"]),
+        ("Task Manager", ["xfce4-taskmanager"]),
+        ("Text Editor", ["mousepad"]),
+        ("Web Browser", ["exo-open", "--launch", "WebBrowser"]),
+    ]
+    container = tk.Frame(launcher, bg=BG)
+    container.pack(fill="both", expand=True, padx=22)
+    def draw(*_):
+        for widget in container.winfo_children():
+            widget.destroy()
+        for name, command in apps:
+            if query.get().casefold() not in name.casefold():
+                continue
+            tk.Button(container, text=name, anchor="w", bg=PANEL, fg=FG,
+                      activebackground=GOLD, relief="flat", padx=12, pady=7,
+                      command=lambda c=command: (launch(c), toggle_launcher())).pack(fill="x", pady=3)
+    query.trace_add("write", draw)
+    draw()
+    entry.focus_set()
+    launcher.bind("<Escape>", lambda _: toggle_launcher())
+
+def button(label, callback):
+    tk.Button(dock, text=label, bg=PANEL, fg=GOLD, relief="flat",
+              activebackground=BG, activeforeground=FG,
+              font=("DejaVu Sans", 11, "bold"), padx=18,
+              command=callback).pack(side="left", fill="y", padx=3, pady=8)
+
+button("☀  MayaOS", toggle_launcher)
+button("Files", lambda: launch(["thunar"]))
+button("Terminal", lambda: launch(["xfce4-terminal"]))
+button("Settings", lambda: launch(["xfce4-settings-manager"]))
+# Phase 2.3: running windows are enumerated through the X11 EWMH protocol.
+task_area = tk.Frame(dock, bg=PANEL)
+task_area.pack(side="left", fill="both", expand=True, padx=12)
+task_signature = None
+
+def refresh_windows():
+    global task_signature
+    try:
+        output = subprocess.check_output(
+            ["/usr/local/bin/mayaos-windowctl", "list"],
+            text=True, stderr=subprocess.DEVNULL, timeout=4)
+        windows = []
+        for line in output.splitlines():
+            if "\\t" in line:
+                wid, name = line.split("\\t", 1)
+                windows.append((wid, name))
+        windows = windows[:7]
+        signature = tuple(windows)
+        if signature != task_signature:
+            task_signature = signature
+            for child in task_area.winfo_children():
+                child.destroy()
+            for wid, name in windows:
+                short = name[:19] + ("…" if len(name) > 19 else "")
+                item = tk.Frame(task_area, bg=PANEL)
+                item.pack(side="left", padx=2, pady=9)
+                tk.Button(item, text=short, bg=BG, fg=FG, relief="flat",
+                          font=("DejaVu Sans", 9), padx=8,
+                          command=lambda w=wid: launch(["/usr/local/bin/mayaos-windowctl", "activate", w])).pack(side="left")
+                tk.Button(item, text="_", bg=PANEL, fg=GOLD, relief="flat",
+                          font=("DejaVu Sans", 9), padx=3,
+                          command=lambda w=wid: launch(["/usr/local/bin/mayaos-windowctl", "minimize", w])).pack(side="left")
+    except (OSError, subprocess.SubprocessError):
+        pass
+    root.after(2500, refresh_windows)
+refresh_windows()
+
+clock = tk.Label(dock, bg=PANEL, fg=FG, font=("DejaVu Sans", 11, "bold"))
+clock.pack(side="right", padx=18)
+def update_clock():
+    clock.configure(text=datetime.now().strftime("%a %b %d  •  %I:%M %p"))
+    root.after(10000, update_clock)
+update_clock()
+tk.Button(dock, text="Session", bg=PANEL, fg=GOLD, relief="flat",
+          font=("DejaVu Sans", 10), command=lambda: launch(["xfce4-session-logout"])).pack(side="right", padx=10)
+tk.Button(dock, text="Sound", bg=PANEL, fg=GOLD, relief="flat",
+          font=("DejaVu Sans", 10), command=lambda: launch(["pavucontrol"])).pack(side="right", padx=8)
+# Phase 2.4: lightweight status center. No elevated privileges or automatic
+# changes to connectivity, sound, or notification preferences.
+status_popup = None
+
+def command_output(args):
+    try:
+        return subprocess.check_output(args, text=True, stderr=subprocess.DEVNULL,
+                                       timeout=2).strip()
+    except (OSError, subprocess.SubprocessError):
+        return ""
+
+def get_status():
+    network = command_output(["nmcli", "-t", "-f", "STATE", "general"])
+    network = network.splitlines()[0] if network else "Unavailable"
+    volume = command_output(["pactl", "get-sink-volume", "@DEFAULT_SINK@"])
+    import re
+    match = re.search(r"(\\d+)%", volume)
+    volume_text = match.group(1) + "%" if match else "Unavailable"
+    battery = "Not detected"
+    devices = command_output(["upower", "-e"]).splitlines()
+    for device in devices:
+        if "battery_" in device:
+            details = command_output(["upower", "-i", device])
+            match = re.search(r"percentage:\\s*([^\\n]+)", details)
+            battery = match.group(1).strip() if match else "Unknown"
+            break
+    return network, volume_text, battery
+
+def toggle_status():
+    global status_popup
+    if status_popup is not None and status_popup.winfo_exists():
+        status_popup.destroy()
+        status_popup = None
+        return
+    status_popup = tk.Toplevel(root)
+    status_popup.title("MayaOS Quick Settings")
+    status_popup.configure(bg=BG)
+    status_popup.geometry(f"320x300+{max(0, screen_w-340)}+{max(0, screen_h-375)}")
+    status_popup.attributes("-topmost", True)
+    tk.Label(status_popup, text="Quick Settings", bg=BG, fg=GOLD,
+             font=("DejaVu Sans", 16, "bold")).pack(pady=14)
+    network, volume, battery = get_status()
+    for title, value in (("Network", network), ("Volume", volume), ("Battery", battery)):
+        tk.Label(status_popup, text=f"{title}: {value}", bg=BG, fg=FG,
+                 font=("DejaVu Sans", 11)).pack(anchor="w", padx=22, pady=5)
+    actions = tk.Frame(status_popup, bg=BG)
+    actions.pack(pady=16)
+    for name, args in (("Network", ["nm-connection-editor"]),
+                       ("Sound", ["pavucontrol"]),
+                       ("Notifications", ["xfce4-notifyd-config"])):
+        tk.Button(actions, text=name, bg=PANEL, fg=GOLD, relief="flat",
+                  command=lambda a=args: launch(a)).pack(side="left", padx=3)
+    status_popup.bind("<Escape>", lambda _: toggle_status())
+
+tk.Button(dock, text="Quick Settings", bg=PANEL, fg=GOLD, relief="flat",
+          font=("DejaVu Sans", 10), command=toggle_status).pack(side="right", padx=8)
+tk.Label(dock, text="MayaOS", bg=PANEL, fg=GOLD,
+         font=("DejaVu Sans", 10, "bold")).pack(side="right", padx=12)
+root.bind("<Escape>", lambda _: launcher.destroy() if launcher and launcher.winfo_exists() else None)
+root.mainloop()

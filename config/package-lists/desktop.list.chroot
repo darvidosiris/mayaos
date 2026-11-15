@@ -47,3 +47,22 @@ qml6-module-qtquick-controls
 qml6-module-qtquick-layouts
 qml6-module-qtquick-window
 qml6-module-qtqml
+
+# Phase 2 MayaOS desktop preview runtime
+python3-tk
+
+# Phase 2.3 X11 taskbar and window control
+x11-utils
+wmctrl
+xdotool
+
+# Phase 2.4 quick settings tools
+network-manager-gnome
+upower
+libnotify-bin
+
+# Phase 2.5 native Qt Quick Python runtime
+python3-pyside6.qtcore
+python3-pyside6.qtgui
+python3-pyside6.qtqml
+python3-pyside6.qtquick

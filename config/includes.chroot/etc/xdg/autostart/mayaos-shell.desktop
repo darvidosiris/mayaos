@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=MayaOS Native Desktop Preview
+Comment=MayaOS Phase 2 custom dock and launcher
+Exec=/usr/local/bin/mayaos-shell-start
+OnlyShowIn=XFCE;
+Terminal=false
+X-GNOME-Autostart-enabled=true

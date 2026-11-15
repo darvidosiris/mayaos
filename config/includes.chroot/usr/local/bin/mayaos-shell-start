@@ -1,0 +1,9 @@
+#!/bin/sh
+# Keep the proven Tk desktop available if Qt Quick cannot initialize.
+if [ "${MAYAOS_SHELL_BACKEND:-qt}" = "tk" ]; then
+  exec /usr/local/bin/mayaos-shell
+fi
+/usr/local/bin/mayaos-appearance >/tmp/mayaos-appearance.log 2>&1 || true
+/usr/local/bin/mayaos-qt-shell >/tmp/mayaos-qt-shell.log 2>&1
+echo "MayaOS Qt shell failed; starting Tk fallback" >> /tmp/mayaos-qt-shell.log
+exec /usr/local/bin/mayaos-shell

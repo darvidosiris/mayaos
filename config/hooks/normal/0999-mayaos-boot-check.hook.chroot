@@ -4,3 +4,10 @@ systemctl enable mayaos-boot-check.service
 chmod 0755 /usr/local/bin/mayaos-desktop-check
 chmod 0755 /usr/local/bin/mayaos-desktop-report
 systemctl enable mayaos-desktop-report.service
+chmod 0755 /usr/local/bin/mayaos-shell
+chmod 0755 /usr/local/bin/mayaos-appearance
+chmod 0755 /usr/local/bin/mayaos-windowctl
+chmod 0755 /usr/local/bin/mayaos-qt-shell
+chmod 0755 /usr/local/bin/mayaos-shell-start
+chmod 0755 /usr/local/bin/mayaos-interaction-test /usr/local/bin/mayaos-interaction-report
+systemctl enable mayaos-interaction-report.service

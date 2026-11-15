@@ -29,3 +29,28 @@ for at, cmd in [
 ]:
     time.sleep(max(0, at - (time.monotonic() - start)))
     print(f"QEMU {at}s: {cmd}: {command(cmd)}", flush=True)
+
+# Capture actual interaction states when the guest reports each verified milestone.
+milestones = {
+    "MAYAOS_LAUNCHER_OK": "mayaos-launcher-open.ppm",
+    "MAYAOS_QUICK_SETTINGS_OK": "mayaos-quick-settings-open.ppm",
+    "MAYAOS_WINDOW_LIST_OK": "mayaos-running-window.ppm",
+}
+captured = set()
+standard = {180: "mayaos-desktop-180s.ppm", 220: "mayaos-desktop-220s.ppm"}
+while time.monotonic() - start < 235:
+    for at, filename in standard.items():
+        if time.monotonic() - start >= at and at not in captured:
+            command("screendump " + os.path.abspath(output + "/" + filename))
+            captured.add(at)
+    try:
+        with open(output + "/qemu-serial.log", "r", errors="replace") as log:
+            serial = log.read()
+        for marker, filename in milestones.items():
+            if marker in serial and marker not in captured:
+                command("screendump " + os.path.abspath(output + "/" + filename))
+                captured.add(marker)
+                print("Captured " + filename, flush=True)
+    except OSError:
+        pass
+    time.sleep(1)

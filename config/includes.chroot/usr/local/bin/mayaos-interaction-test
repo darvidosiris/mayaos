@@ -1,0 +1,69 @@
+#!/bin/sh
+# QEMU-only graphical interaction smoke test.
+n=0
+while [ ! -f /run/mayaos-ci/enabled ] && [ "$n" -lt 20 ]; do
+  n=$((n + 1))
+  sleep 1
+done
+[ -f /run/mayaos-ci/enabled ] || exit 0
+export DISPLAY="${DISPLAY:-:0}"
+report() { printf '%s\n' "$1" >> /tmp/mayaos-interaction-events; }
+fail() { report "MAYAOS_INTERACTION_FAIL $1"; exit 1; }
+geometry=$(xdotool getdisplaygeometry 2>/dev/null || echo "1280 800")
+screen_w=${geometry%% *}
+screen_h=${geometry##* }
+dock_y=$((screen_h - 32))
+settings_x=$((screen_w - 300))
+report "MAYAOS_INTERACTION_TEST_STARTED display=$DISPLAY"
+i=0
+while [ "$i" -lt 45 ]; do
+  shell_id=$(xdotool search --onlyvisible --name '^MayaOS Native Preview$' 2>/dev/null | head -n 1)
+  [ -n "$shell_id" ] && break
+  i=$((i + 1))
+  sleep 2
+done
+[ -n "$shell_id" ] || fail "native Qt shell not visible"
+report MAYAOS_QT_SHELL_OK
+sleep 5
+attempt=0
+while [ "$attempt" -lt 3 ]; do
+  xdotool search --onlyvisible --name '^MayaOS Launcher$' >/dev/null 2>&1 && break
+  attempt=$((attempt + 1))
+  report "MAYAOS_LAUNCHER_ATTEMPT $attempt dock_y=$dock_y shell_id=$shell_id"
+  timeout 3s xdotool windowactivate "$shell_id" 2>/dev/null || true
+  timeout 5s xdotool mousemove 62 "$dock_y" click 1 || fail "launcher click"
+  sleep 3
+done
+xdotool search --onlyvisible --name '^MayaOS Launcher$' >/dev/null 2>&1 || {
+  report "MAYAOS_OPEN_WINDOWS $(wmctrl -l | tr '\n' ';')"
+  fail "launcher not visible"
+}
+report MAYAOS_LAUNCHER_OK
+sleep 5
+xdotool mousemove 62 "$dock_y" click 1 || true
+sleep 1
+report "MAYAOS_QUICK_SETTINGS_CLICK x=$settings_x y=$dock_y"
+timeout 5s xdotool mousemove "$settings_x" "$dock_y" click 1 || fail "quick settings click"
+sleep 3
+xdotool search --onlyvisible --name '^MayaOS Quick Settings$' >/dev/null 2>&1 || {
+  report "MAYAOS_OPEN_WINDOWS $(wmctrl -l | tr '\n' ';')"
+  fail "quick settings not visible"
+}
+report MAYAOS_QUICK_SETTINGS_OK
+sleep 5
+thunar >/tmp/mayaos-test-thunar.log 2>&1 &
+sleep 5
+xdotool search --onlyvisible --class Thunar >/dev/null 2>&1 || fail "Thunar window missing"
+/usr/local/bin/mayaos-windowctl list | grep -qi 'Thunar\|File Manager' || fail "Thunar absent from taskbar list"
+report MAYAOS_WINDOW_LIST_OK
+thunar_id=$(xdotool search --onlyvisible --class Thunar 2>/dev/null | head -n 1)
+[ -n "$thunar_id" ] || fail "Thunar window ID missing"
+thunar_hex=$(printf '0x%x' "$thunar_id")
+/usr/local/bin/mayaos-windowctl minimize "$thunar_hex" || fail "minimize command"
+sleep 2
+/usr/local/bin/mayaos-windowctl activate "$thunar_hex" || fail "activate command"
+sleep 3
+xdotool search --onlyvisible --class Thunar >/dev/null 2>&1 || fail "Thunar not restored"
+report MAYAOS_WINDOW_CONTROLS_OK
+sleep 5
+report MAYAOS_INTERACTION_OK
