@@ -157,7 +157,7 @@ Window {
         id: quickSettings
         visible: shell.settingsOpen
         title: "MayaOS Quick Settings"
-        flags: Qt.Tool | Qt.WindowStaysOnTopHint
+        flags: Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
         color: "#101b2b"
         width: Math.min(390, Screen.width - 24)
         height: 240
