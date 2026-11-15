@@ -87,7 +87,6 @@ Window {
                             DockButton {
                                 text: modelData.title
                                 width: shell.dockButtonWidth
-                                elide: Text.ElideRight
                                 onClicked: mayaBridge.activate(modelData.wid)
                             }
                             DockButton {
