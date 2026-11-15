@@ -114,12 +114,13 @@ Window {
         visible: shell.launcherOpen
         onVisibleChanged: if (visible) search.forceActiveFocus()
         title: "MayaOS Launcher"
-        flags: Qt.Tool | Qt.WindowStaysOnTopHint
+        flags: Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
         color: "#101b2b"
         width: Math.min(400, Screen.width - 24)
         height: Math.min(420, Screen.height - shell.height - 30)
-        x: 12
-        y: Screen.height - height - shell.height - 10
+        x: Math.max(8, shell.x + 9)
+        y: Math.max(8, shell.y - height - 8)
+        Rectangle { anchors.fill: parent; radius: 12; color: "transparent"; border.color: "#4c6072"; border.width: 2 }
         ColumnLayout {
             anchors.fill: parent
             anchors.margins: 18
@@ -160,8 +161,9 @@ Window {
         color: "#101b2b"
         width: Math.min(390, Screen.width - 24)
         height: 240
-        x: Screen.width - width - 12
-        y: Screen.height - height - shell.height - 10
+        x: Math.max(8, shell.x + shell.width - width - 12)
+        y: Math.max(8, shell.y - height - 8)
+        Rectangle { anchors.fill: parent; radius: 12; color: "transparent"; border.color: "#4c6072"; border.width: 2 }
         ColumnLayout {
             anchors.fill: parent
             anchors.margins: 18
