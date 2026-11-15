@@ -117,12 +117,19 @@ done
 # Validate CI-only guest scripts before the expensive ISO build.
 for s in \
   config/includes.chroot/usr/local/bin/mayaos-interaction-test \
-  config/includes.chroot/usr/local/bin/mayaos-interaction-report \
-  config/includes.chroot/usr/local/bin/mayaos-windowctl; do
+  config/includes.chroot/usr/local/bin/mayaos-interaction-report; do
   if sh -n "${ROOT}/${s}"; then
     ok "sh -n ${s}"
   else
     bad "sh -n ${s}"
+  fi
+done
+
+for s in config/includes.chroot/usr/local/bin/mayaos-windowctl config/includes.chroot/usr/local/bin/mayaos-qt-shell; do
+  if python3 -c 'import ast,sys; ast.parse(open(sys.argv[1], encoding="utf-8").read())' "${ROOT}/${s}"; then
+    ok "python syntax ${s}"
+  else
+    bad "python syntax ${s}"
   fi
 done
 
